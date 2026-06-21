@@ -1,9 +1,10 @@
 using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
+using System.Threading.Tasks;
 
 namespace BiomorphRandomizer;
 
-static class SessionTools {
+public static class SessionTools {
 	private static string host = "localhost";
 	private static int port = 38281;
 	private static string password = null;
