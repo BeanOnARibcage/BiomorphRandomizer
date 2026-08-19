@@ -2,6 +2,7 @@ using HarmonyLib;
 using System.Threading.Tasks;
 using Il2CppLDS.Sardonyx.Actions;
 using MelonLoader;
+using Il2CppLDS.Sardonyx.Actors;
 
 namespace BiomorphRandomizer;
 
@@ -16,5 +17,13 @@ public class Patches {
 		//__instance._ItemData = null; //this crashes the game (need to figure out what to do instead)
 		Melon<Randomizer>.Logger.Msg(__instance.Interaction.name);
 		return;
+	}
+	
+	[HarmonyPatch(typeof(ActorPlayer), nameof(ActorPlayer.OnEnable))]
+	[HarmonyPrefix]
+	static void Connect() {
+		if (!SessionTools.CheckConnection()) {
+			SessionTools.Connect("Harlo");
+		}
 	}
 }

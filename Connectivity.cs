@@ -1,6 +1,7 @@
 using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using System.Threading.Tasks;
+using MelonLoader;
 
 namespace BiomorphRandomizer;
 
@@ -20,11 +21,12 @@ public static class SessionTools {
 		result = Session.TryConnectAndLogin("Biomorph", slotname, ItemsHandlingFlags.AllItems,
 			password: password);
 		if (result.Successful) {
-			return;
+			Melon<Randomizer>.Logger.Msg("Connection successful");
 		}
 		else {
-			return;
+			Melon<Randomizer>.Logger.Msg("Connection unsuccessful");
 		}
+		return;
 	}
 	
 	public static bool CheckConnection() {
