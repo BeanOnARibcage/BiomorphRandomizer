@@ -2,6 +2,7 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using System.Threading.Tasks;
 using MelonLoader;
+using Archipelago.MultiClient.Net.Models;
 
 namespace BiomorphRandomizer;
 
@@ -31,5 +32,17 @@ public static class SessionTools {
 	
 	public static bool CheckConnection() {
 		return Session.ConnectionInfo.Slot > -1;
+	}
+	
+	public static void SendLocation(int id) {
+		Session.Locations.CompleteLocationChecks(id);
+	}
+	
+	public static void CheckForAndReceiveItem() {
+		if (CheckConnection() && Session.Items.Any()) {
+			ItemInfo item;
+			item = Session.Items.DequeueItem();
+			ItemGiver.IntroGiveItemFromId((int)item.ItemId);
+		}
 	}
 }

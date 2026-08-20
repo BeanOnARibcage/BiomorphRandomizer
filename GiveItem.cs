@@ -9,6 +9,32 @@ public static class ItemGiver {
 		WeaponData chipData = InventoryHandler.ItemDatabase.Chips[(int)chip];
 		InventoryHandler.UpdateItem((ItemData)chipData, 1);
 	}
+	
+	public static void IntroGiveItemFromId(int id) {
+		if (id < 1 || id > 5) {
+			return;
+		}
+		ItemData item = null;
+		if (id == 1) {
+			item = InventoryHandler.ItemDatabase.RawMaterials;
+		}
+		if (id == 2) {
+			item = InventoryHandler.ItemDatabase.Laurentium;
+		}
+		if (id == 3) {
+			item = InventoryHandler.ItemDatabase.VitalModules;
+		}
+		if (id == 4) {
+			item = InventoryHandler.ItemDatabase.LogicBlocks;
+		}
+		if (id == 5) {
+			item = (ItemData)InventoryHandler.ItemDatabase.MementoHorseshoeMagnet;
+		}
+		if (item != null) {
+			InventoryHandler.UpdateItem(item, 1);
+		}
+		return;
+	}
 }
 
 public enum Chips {
