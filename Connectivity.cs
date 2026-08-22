@@ -7,18 +7,23 @@ using Archipelago.MultiClient.Net.Models;
 namespace BiomorphRandomizer;
 
 public static class SessionTools {
-	private static string host = "localhost";
-	private static int port = 38281;
-	private static string password = null;
+	private static string host;
+	private static int port;
+	private static string password;
+	private static string slotname;
 	
 	public static ArchipelagoSession Session;
 	
 	public static void CreateSession() {
+		host = Preferences.Host.Value;
+		port = Preferences.Port.Value;
 		Session = ArchipelagoSessionFactory.CreateSession(host, port);
 	}
 	
-	public static void Connect(string slotname) {
+	public static void Connect() {
 		LoginResult result;
+		password = Preferences.Password.Value;
+		slotname = Preferences.Slotname.Value;
 		result = Session.TryConnectAndLogin("Biomorph", slotname, ItemsHandlingFlags.AllItems,
 			password: password);
 		if (result.Successful) {

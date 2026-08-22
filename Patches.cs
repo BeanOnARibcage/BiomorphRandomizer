@@ -30,7 +30,7 @@ public class Patches {
 	[HarmonyPostfix]
 	static void Connect() {
 		if (!SessionTools.CheckConnection()) {
-			SessionTools.Connect("Harlo");
+			SessionTools.Connect();
 		}
 	}
 }
