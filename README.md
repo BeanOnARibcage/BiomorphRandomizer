@@ -1,5 +1,5 @@
 An Archipelago mod for Biomorph! At present it only randomizes five items in the intro, and it doesn't do some of the things an Archipelago client needs to do.
-For example, the client doesn't handle locations being checked or items being received when it's not connected.
+For example, the client doesn't handle locations being checked when it's not connected.
 
 ## Installation Instructions
 These instructions are for the Windows Steam version of the game. I haven't tested compatibility with other versions.
@@ -19,7 +19,7 @@ Before opening the game, go to your game files. Open `UserData/MelonPreferences.
 Save the file and start the game.
 
 The game will attempt to connect to the Archipelago world when loading a save.
-Make sure you stay connected to Archipelago whenever you plan to send or receive items,
+Make sure you stay connected to Archipelago whenever you plan to send items,
 since I haven't made functionality to handle offline activity yet. I also recommend connecting an Archipelago
 text client. Once you start the game, the five items you can obtain in the Core's Lab during the intro
 (excluding the Bruisers) will be randomized. The item screen will still show you the original item that was

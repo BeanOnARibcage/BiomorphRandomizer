@@ -46,11 +46,19 @@ public static class SessionTools {
 		Session.Locations.CompleteLocationChecks(id);
 	}
 	
-	public static void CheckForAndReceiveItem() {
+	public static void SendGoal() {
+		Session.SetGoalAchieved();
+	}
+	
+	// returns true if an item was received, so we can immediately check for the next item
+	public static bool CheckForAndReceiveItem() {
 		if (CheckConnection() && Session.Items.Any()) {
 			ItemInfo item;
 			item = Session.Items.DequeueItem();
+			Melon<Randomizer>.Logger.Msg("Dequeued item " + item.ItemDisplayName);
 			ItemGiver.IntroGiveItemFromId((int)item.ItemId);
+			return true;
 		}
+		return false;
 	}
 }
