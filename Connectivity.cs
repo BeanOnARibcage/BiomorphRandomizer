@@ -24,6 +24,9 @@ public static class SessionTools {
 		LoginResult result;
 		password = Preferences.Password.Value;
 		slotname = Preferences.Slotname.Value;
+		if (password == "") {
+			password = null;
+		}
 		result = Session.TryConnectAndLogin("Biomorph", slotname, ItemsHandlingFlags.AllItems,
 			password: password);
 		if (result.Successful) {

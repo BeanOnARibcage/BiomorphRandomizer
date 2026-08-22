@@ -11,7 +11,7 @@ public static class Preferences {
 		ConnectionInfo = MelonPreferences.CreateCategory("biomorph_connection_info", "Biomorph Connection Info");
 		Host = ConnectionInfo.CreateEntry<string>("host", "archipelago.gg", "Host");
 		Port = ConnectionInfo.CreateEntry<int>("port", 38281, "Port");
-		Password = ConnectionInfo.CreateEntry<string>("password", null, "Password");
+		Password = ConnectionInfo.CreateEntry<string>("password", "", "Password");
 		Slotname = ConnectionInfo.CreateEntry<string>("slotname", "Harlo", "Slot Name");
 	}
 	
