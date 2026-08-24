@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using Il2CppLDS.Sardonyx.Actions;
 using MelonLoader;
 using Il2CppLDS.Sardonyx.Actors;
+using Il2CppLDS.MindBreaker.Core;
+using Il2CppLDS.Framework.Core;
+using Il2CppLDS.MindBreaker.UI;
 
 namespace BiomorphRandomizer;
 
@@ -16,7 +19,7 @@ public class Patches {
 		if (interaction.name == "Prefab_Interaction_Money(Clone)") {
 			return;
 		}
-		int id = LocationFinder.IntroIdFromInteractionName(interaction.name);
+		long id = LocationFinder.IntroIdFromInteractionName(interaction.name);
 		if (id < 0) {
 			return;
 		}
@@ -26,11 +29,43 @@ public class Patches {
 		return;
 	}
 	
-	[HarmonyPatch(typeof(ActorPlayer), nameof(ActorPlayer.OnEnable))]
-	[HarmonyPostfix]
-	static void Connect() {
+	[HarmonyPatch(typeof(SaveSlotUI), nameof(SaveSlotUI.UISaveSlotClick))]
+	[HarmonyPrefix]
+	static void Connect(SaveSlotUI __instance) {
 		if (!SessionTools.CheckConnection()) {
 			SessionTools.Connect();
 		}
+		if (SessionTools.CheckConnection() && __instance._GameData != null) {
+			LocationsAlreadyFound locs = new LocationsAlreadyFound(__instance._GameData);
+			SessionTools.SendMultipleLocations(locs.LocationIds);	
+		}	
 	}
+	
+	/* Hopefully I can do this in the SaveSlotUI.UISaveSlotClick patch instead
+	[HarmonyPatch(typeof(GameManager.__c__DisplayClass113_0), 
+		nameof(GameManager.__c__DisplayClass113_0._StateTitleScreen_b__0))]
+	[HarmonyPrefix]
+	static void ReadSaveFile0(GameData gameData) {
+		Melon<Randomizer>.Logger.Msg("Reading save file 0");
+		LocationsAlreadyFound locs = new LocationsAlreadyFound(gameData);
+		SessionTools.SendMultipleLocations(locs.LocationIds); // I need to find a later time to do this
+	}
+	
+	[HarmonyPatch(typeof(GameManager.__c__DisplayClass113_0), 
+		nameof(GameManager.__c__DisplayClass113_0._StateTitleScreen_b__1))]
+	[HarmonyPrefix]
+	static void ReadSaveFile1(GameData gameData) {
+		Melon<Randomizer>.Logger.Msg("Reading save file 1");
+		LocationsAlreadyFound locs = new LocationsAlreadyFound(gameData);
+		SessionTools.SendMultipleLocations(locs.LocationIds);
+	}
+	
+	[HarmonyPatch(typeof(GameManager.__c__DisplayClass113_0), 
+		nameof(GameManager.__c__DisplayClass113_0._StateTitleScreen_b__2))]
+	[HarmonyPrefix]
+	static void ReadSaveFile2(GameData gameData) {
+		Melon<Randomizer>.Logger.Msg("Reading save file 2");
+		LocationsAlreadyFound locs = new LocationsAlreadyFound(gameData);
+		SessionTools.SendMultipleLocations(locs.LocationIds);
+	} */
 }

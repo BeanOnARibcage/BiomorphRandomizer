@@ -1,7 +1,8 @@
-
+using System.Collections.Generic;
+using Il2CppLDS.MindBreaker.Core;
 
 public static class LocationFinder {
-	public static int IntroIdFromInteractionName(string interaction_name) {
+	public static long IntroIdFromInteractionName(string interaction_name) {
 		if (interaction_name == "Prefab_Interaction_RawMaterials_Z03_01") {
 			return 1;
 		}
@@ -18,5 +19,28 @@ public static class LocationFinder {
 			return 5;
 		}
 		return -1;
+	}
+}
+
+public class LocationsAlreadyFound {
+	public List<long> LocationIds = new List<long>();
+	
+	public void CheckForLocations(GameData gameData) {
+		string variables = gameData.Variables;
+		if (variables.Contains("SerializationData_Z03_RawMaterial_01=true"))
+			LocationIds.Add(1);
+		if (variables.Contains("SerializationData_Z03_Laurentium_01=true"))
+			LocationIds.Add(2);
+		if (variables.Contains("SerializationData_Z03_VitalModule_01=true"))
+			LocationIds.Add(3);
+		if (variables.Contains("SerializationData_Z03_LogicBlocks_01=true"))
+			LocationIds.Add(4);
+		if (variables.Contains("SerializationData_Memento_02=true"))
+			LocationIds.Add(5);
+		return;
+	}
+	
+	public LocationsAlreadyFound(GameData gameData) {
+		CheckForLocations(gameData);
 	}
 }
