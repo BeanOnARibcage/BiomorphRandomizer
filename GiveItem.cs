@@ -35,6 +35,18 @@ public static class ItemGiver {
 		}
 		return;
 	}
+	
+	public static int FindItemCount(string variables) {
+		int index = variables.IndexOf("ArchipelagoItems");
+		if (index == -1)
+			return 0;
+		else {
+			if (int.TryParse(variables.Substring(index + 17, 3), out int number))
+				return number;
+			else
+				return 0;
+		}
+	}
 }
 
 public enum Chips {

@@ -11,7 +11,6 @@ public class Randomizer : MelonMod {
 		Preferences.CreatePreferences();
 		Preferences.LoadPreferences();
 		SessionTools.CreateSession();
-		HarmonyLib.Harmony.CreateAndPatchAll(typeof(Patches));
 	}
 	
 	public override void OnUpdate() {

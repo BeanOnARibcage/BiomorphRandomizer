@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Il2CppLDS.MindBreaker.Core;
+using Il2CppPixelCrushers.DialogueSystem;
 
 public static class LocationFinder {
 	public static long IntroIdFromInteractionName(string interaction_name) {
@@ -26,16 +27,15 @@ public class LocationsAlreadyFound {
 	public List<long> LocationIds = new List<long>();
 	
 	public void CheckForLocations(GameData gameData) {
-		string variables = gameData.Variables;
-		if (variables.Contains("SerializationData_Z03_RawMaterial_01=true"))
+		if (DialogueLua.GetVariable("SerializationData_Z03_RawMaterial_01", false))
 			LocationIds.Add(1);
-		if (variables.Contains("SerializationData_Z03_Laurentium_01=true"))
+		if (DialogueLua.GetVariable("SerializationData_Z03_Laurentium_01", false))
 			LocationIds.Add(2);
-		if (variables.Contains("SerializationData_Z03_VitalModule_01=true"))
+		if (DialogueLua.GetVariable("SerializationData_Z03_VitalModule_01", false))
 			LocationIds.Add(3);
-		if (variables.Contains("SerializationData_Z03_LogicBlocks_01=true"))
+		if (DialogueLua.GetVariable("SerializationData_Z03_LogicBlocks_01", false))
 			LocationIds.Add(4);
-		if (variables.Contains("SerializationData_Memento_02=true"))
+		if (DialogueLua.GetVariable("SerializationData_Memento_02", false))
 			LocationIds.Add(5);
 		return;
 	}

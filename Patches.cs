@@ -6,6 +6,8 @@ using Il2CppLDS.Sardonyx.Actors;
 using Il2CppLDS.MindBreaker.Core;
 using Il2CppLDS.Framework.Core;
 using Il2CppLDS.MindBreaker.UI;
+using UnityEngine;
+using Il2CppPixelCrushers.DialogueSystem;
 
 namespace BiomorphRandomizer;
 
@@ -32,40 +34,35 @@ public class Patches {
 	[HarmonyPatch(typeof(SaveSlotUI), nameof(SaveSlotUI.UISaveSlotClick))]
 	[HarmonyPrefix]
 	static void Connect(SaveSlotUI __instance) {
+		SessionTools.ReceivingItemsOkay = false;
 		if (!SessionTools.CheckConnection()) {
 			SessionTools.Connect();
 		}
 		if (SessionTools.CheckConnection() && __instance._GameData != null) {
 			LocationsAlreadyFound locs = new LocationsAlreadyFound(__instance._GameData);
-			SessionTools.SendMultipleLocations(locs.LocationIds);	
-		}	
+			SessionTools.SendMultipleLocations(locs.LocationIds);
+			//int itemCount = ItemGiver.FindItemCount(__instance._GameData.Variables);
+			SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
+		}
+		if (SessionTools.CheckConnection()) {
+			SessionTools.ReceivingItemsOkay = true;
+		}
 	}
 	
-	/* Hopefully I can do this in the SaveSlotUI.UISaveSlotClick patch instead
-	[HarmonyPatch(typeof(GameManager.__c__DisplayClass113_0), 
-		nameof(GameManager.__c__DisplayClass113_0._StateTitleScreen_b__0))]
+	[HarmonyPatch(typeof(SaveHandler), nameof(SaveHandler.SaveGame))]
 	[HarmonyPrefix]
-	static void ReadSaveFile0(GameData gameData) {
-		Melon<Randomizer>.Logger.Msg("Reading save file 0");
-		LocationsAlreadyFound locs = new LocationsAlreadyFound(gameData);
-		SessionTools.SendMultipleLocations(locs.LocationIds); // I need to find a later time to do this
+	static void RecordItemsProcessed() {
+		Melon<Randomizer>.Logger.Msg("SaveGame called");
+		DialogueLua.SetVariable("Archipelago_Items", SessionTools.ItemsProcessed);
+		/*string vars = SaveHandler.GameData.Variables;
+		int index = vars.IndexOf("ArchipelagoItems");
+		if (index == -1) {
+			string entry = "ArchipelagoItems=" + SessionTools.ItemsProcessed.ToString("D3");
+			vars = vars.TrimEnd().Insert(vars.Length - 2, entry);
+		}
+		else {
+			vars = vars.Remove(index + 17, 3).Insert(index + 17, SessionTools.ItemsProcessed.ToString("D3"));
+		}
+		SaveHandler.GameData.Variables = vars;*/
 	}
-	
-	[HarmonyPatch(typeof(GameManager.__c__DisplayClass113_0), 
-		nameof(GameManager.__c__DisplayClass113_0._StateTitleScreen_b__1))]
-	[HarmonyPrefix]
-	static void ReadSaveFile1(GameData gameData) {
-		Melon<Randomizer>.Logger.Msg("Reading save file 1");
-		LocationsAlreadyFound locs = new LocationsAlreadyFound(gameData);
-		SessionTools.SendMultipleLocations(locs.LocationIds);
-	}
-	
-	[HarmonyPatch(typeof(GameManager.__c__DisplayClass113_0), 
-		nameof(GameManager.__c__DisplayClass113_0._StateTitleScreen_b__2))]
-	[HarmonyPrefix]
-	static void ReadSaveFile2(GameData gameData) {
-		Melon<Randomizer>.Logger.Msg("Reading save file 2");
-		LocationsAlreadyFound locs = new LocationsAlreadyFound(gameData);
-		SessionTools.SendMultipleLocations(locs.LocationIds);
-	} */
 }

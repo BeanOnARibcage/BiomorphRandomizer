@@ -12,8 +12,11 @@ public static class SessionTools {
 	private static int port;
 	private static string password;
 	private static string slotname;
+	private static int itemsDequeued = 0;
 	
 	public static ArchipelagoSession Session;
+	public static bool ReceivingItemsOkay = false;
+	public static int ItemsProcessed = 0;
 	
 	public static void CreateSession() {
 		host = Preferences.Host.Value;
@@ -55,13 +58,20 @@ public static class SessionTools {
 		Session.SetGoalAchieved();
 	}
 	
-	// returns true if an item was received, so we can immediately check for the next item
+	// returns true if an item was dequeued, so we can immediately check for the next item
 	public static bool CheckForAndReceiveItem() {
 		if (CheckConnection() && Session.Items.Any()) {
 			ItemInfo item;
-			item = Session.Items.DequeueItem();
-			Melon<Randomizer>.Logger.Msg("Dequeued item " + item.ItemDisplayName);
-			ItemGiver.IntroGiveItemFromId((int)item.ItemId);
+			if (ItemsProcessed > itemsDequeued) {
+				Session.Items.DequeueItem();
+				itemsDequeued++;
+			}
+			else {
+				item = Session.Items.DequeueItem();
+				itemsDequeued++;
+				ItemGiver.IntroGiveItemFromId((int)item.ItemId);
+				ItemsProcessed++;
+			}
 			return true;
 		}
 		return false;
