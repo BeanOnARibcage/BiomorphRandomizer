@@ -8,6 +8,7 @@ using Il2CppLDS.Framework.Core;
 using Il2CppLDS.MindBreaker.UI;
 using UnityEngine;
 using Il2CppPixelCrushers.DialogueSystem;
+using Il2CppLDS.MindBreaker.Data;
 
 namespace BiomorphRandomizer;
 
@@ -54,15 +55,44 @@ public class Patches {
 	static void RecordItemsProcessed() {
 		Melon<Randomizer>.Logger.Msg("SaveGame called");
 		DialogueLua.SetVariable("Archipelago_Items", SessionTools.ItemsProcessed);
-		/*string vars = SaveHandler.GameData.Variables;
-		int index = vars.IndexOf("ArchipelagoItems");
-		if (index == -1) {
-			string entry = "ArchipelagoItems=" + SessionTools.ItemsProcessed.ToString("D3");
-			vars = vars.TrimEnd().Insert(vars.Length - 2, entry);
-		}
-		else {
-			vars = vars.Remove(index + 17, 3).Insert(index + 17, SessionTools.ItemsProcessed.ToString("D3"));
-		}
-		SaveHandler.GameData.Variables = vars;*/
 	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.CoroutineToggleZone))]
+	[HarmonyPrefix]
+	static void LogToggleZone(string zone, bool enable) {
+		Melon<Randomizer>.Logger.Msg("CoroutineToggleZone zone: " + zone + " enable: " + enable.ToString());
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
+	[HarmonyPrefix]
+	static void LogLMIA(string zone) {
+		Melon<Randomizer>.Logger.Msg("LoadMapsInternalAsync zone: " + zone);
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ReloadZone))]
+	[HarmonyPrefix]
+	static void LogReload(string zone) {
+		Melon<Randomizer>.Logger.Msg("ReloadZone zone: " + zone);
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ReloadZoneInternal))]
+	[HarmonyPrefix]
+	static void LogReloadInternal(string zone) {
+		Melon<Randomizer>.Logger.Msg("ReloadZoneInternal zone: " + zone);
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActive))]
+	[HarmonyPrefix]
+	static void LogToggle(MapData map, bool enable) {
+		Melon<Randomizer>.Logger.Msg("ToggleZoneActive map: " + map.ToString() + " enable: " + enable.ToString());
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActiveAsync))]
+	[HarmonyPrefix]
+	static void LogToggleA(string mapName, bool enable) {
+		Melon<Randomizer>.Logger.Msg("ToggleZoneActiveAsync mapName: " + mapName +
+			" enable: " + enable.ToString());
+	}
+	
+	// It should (hopefully) be fine to use ToggleZoneActiveAsyng on individual rooms (true to load, false to unload)
 }

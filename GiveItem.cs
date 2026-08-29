@@ -1,6 +1,14 @@
 using Il2CppLDS.Framework.Inventory;
 using Il2CppLDS.MindBreaker.Core;
 using Il2CppLDS.MindBreaker.Data;
+using UnityEngine;
+using MelonLoader;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using System.Reflection;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace BiomorphRandomizer;
 
@@ -46,6 +54,77 @@ public static class ItemGiver {
 			else
 				return 0;
 		}
+	}
+	
+	private static Il2CppSystem.Collections.IEnumerator coroutine1 = null;
+	private static Il2CppSystem.Collections.IEnumerator coroutine2 = null;
+	private static Il2CppSystem.Collections.IEnumerator coroutine3 = null;
+	private static AsyncOperationHandle<SceneInstance> sceneHandle = null;
+	private static bool loading = false;
+	private static bool waiting = false;
+	
+	public static void StartGetInteractions() {
+		coroutine1 = SceneHandler.ToggleZoneActiveAsync("Z04_10", true);
+		loading = true;
+		waiting = false;
+	}
+	
+	public static void GetInteractions() {
+		if (coroutine1 != null) {
+			if (sceneHandle != null && sceneHandle.IsDone) {
+				waiting = false;
+				if (loading) {
+					// Make an Archipelago scene
+					// Clone Root/GameplayAssets/Loot/Prefab_Interaction_LogBook into that scene
+					// Maybe make some preliminary edits to the cloned InteractionPickItem
+					sceneHandle = null;
+				}
+				else {
+					sceneHandle = null;
+				}
+			}
+			else if (waiting) {
+				return;
+			}
+			else if (coroutine3 != null && coroutine3.MoveNext()) {
+				if (coroutine3.Current is AsyncOperationHandle<SceneInstance>) {
+					sceneHandle = coroutine3.Current.Cast<AsyncOperationHandle<SceneInstance>>();
+					waiting = true;
+				}
+			}
+			else if (coroutine2 != null && coroutine2.MoveNext()) {
+				coroutine3 = coroutine2.Current.Cast<Il2CppSystem.Collections.IEnumerator>();
+			}
+			else if (coroutine1.MoveNext()) {
+				coroutine2 = coroutine1.Current.Cast<Il2CppSystem.Collections.IEnumerator>();
+			}
+			else if (coroutine2 != null && coroutine3 != null && sceneHandle == null) {
+				if (loading) {
+					coroutine1 = SceneHandler.ToggleZoneActiveAsync("Z04_10", false);
+					coroutine2 = null;
+					coroutine3 = null;
+					loading = false;
+				}
+				else {
+					coroutine1 = null;
+					coroutine2 = null;
+					coroutine3 = null;
+				}
+			}
+		} 
+		
+		// For now I just want to check out the AssetBundles
+		// Il2CppSystem.Collections.IEnumerable bundleList = 
+		// 	AssetBundle.GetAllLoadedAssetBundles().Cast<Il2CppSystem.Collections.IEnumerable>();
+		// foreach (Il2CppSystem.Object bundleObj in bundleList) {}
+		// 	// AssetBundle bundle = bundleObj.Cast<AssetBundle>();
+		// 	// Melon<Randomizer>.Logger.Msg("Bundle " + bundle.name);
+		// 	// Melon<Randomizer>.Logger.Msg("Streamed Scene Bundle: " + bundle.isStreamedSceneAssetBundle.ToString());
+		// 	// IEnumerable<string> assetNameList = bundle.GetAllAssetNames();
+		// 	// foreach (string assetName in assetNameList) {
+		// 	// 	Melon<Randomizer>.Logger.Msg("\t" + "Asset " + assetName);
+		// 	// }
+		// }
 	}
 }
 

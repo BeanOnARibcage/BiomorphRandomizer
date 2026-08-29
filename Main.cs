@@ -1,5 +1,7 @@
 ﻿using MelonLoader;
 using HarmonyLib;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace BiomorphRandomizer;
 
@@ -14,6 +16,7 @@ public class Randomizer : MelonMod {
 	}
 	
 	public override void OnUpdate() {
+		ItemGiver.GetInteractions();
 		bool itemGiven;
 		updateCounter++;
 		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
