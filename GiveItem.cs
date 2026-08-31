@@ -9,10 +9,19 @@ using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System.Reflection;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.SceneManagement;
+using Il2CppLDS.Sardonyx.Actions;
 
 namespace BiomorphRandomizer;
 
 public static class ItemGiver {
+	public static Scene APScene;
+	public static GameObject APPickItemGO = null;
+	public static InteractionPickItem APPickItem = null;
+	public static ItemData APItemData = null;
+	
+	private static ItemData laptopData = null;
+	
 	public static void GiveChip(Chips chip) {
 		WeaponData chipData = InventoryHandler.ItemDatabase.Chips[(int)chip];
 		InventoryHandler.UpdateItem((ItemData)chipData, 1);
@@ -74,9 +83,26 @@ public static class ItemGiver {
 			if (sceneHandle != null && sceneHandle.IsDone) {
 				waiting = false;
 				if (loading) {
-					// Make an Archipelago scene
-					// Clone Root/GameplayAssets/Loot/Prefab_Interaction_LogBook into that scene
-					// Maybe make some preliminary edits to the cloned InteractionPickItem
+					APScene = SceneManager.CreateScene("Archipelago");
+					GameObject laptopInteraction = GameObject.Find("/Root/GameplayAssets/Loot/Prefab_Interaction_LogBook");
+					if (laptopInteraction == null) {
+						Melon<Randomizer>.Logger.Msg("Unable to find the interaction GameObject");
+						sceneHandle = null;
+						return;
+					}
+					// UnityEngine.Object.Instantiate makes a clone
+					APPickItemGO = UnityEngine.Object.Instantiate(laptopInteraction, APScene).Cast<GameObject>();
+					APPickItem = APPickItemGO.GetComponent<InteractionPickItem>();
+					if (APPickItem == null) {
+						Melon<Randomizer>.Logger.Msg("The found GameObject does not have an InteractionPickItem");
+						sceneHandle = null;
+						return;
+					}
+					laptopData = APPickItem._ItemData;
+					APItemData = UnityEngine.Object.Instantiate(laptopData).Cast<ItemData>();
+					APPickItem._AutoDisable = false;
+					APItemData._NameID = "Archipelago Item";
+					APItemData._DescriptionID = "A randomized item from Archipelago";
 					sceneHandle = null;
 				}
 				else {
