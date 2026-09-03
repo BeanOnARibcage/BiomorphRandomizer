@@ -20,8 +20,6 @@ Save the file and start the game.
 The game will attempt to connect to the Archipelago world when loading a save.
 I also recommend connecting an Archipelago text client.
 Once you start the game, the five items you can obtain in the Core's Lab during the intro
-(excluding the Bruisers) will be randomized. The item screen will still show you the original item that was
-in that location, but if you check your inventory, you should have the randomized item instead.
-If you have a text client connected, you can verify which item you should've received.
+(excluding the Bruisers) will be randomized.
 
 The mod does not currently send a goal completion flag.
