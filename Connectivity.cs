@@ -60,7 +60,7 @@ public static class SessionTools {
 	
 	// returns true if we should immediately check for the next item (i.e. if money was dequeued)
 	public static bool CheckForAndReceiveItem() {
-		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem()) {
+		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() && ItemGiver.APPickItem != null) {
 			ItemInfo item;
 			if (ItemsProcessed > itemsDequeued) {
 				Session.Items.DequeueItem();

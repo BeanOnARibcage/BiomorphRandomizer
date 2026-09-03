@@ -31,7 +31,7 @@ public static class ItemGiver {
 	private static ItemData laptopData = null;
 	
 	public static bool CanGetItem() {
-		return GameManager.GameState == GameManager.EGameState.Gameplay;
+		return GameManager.CanUseInteractions && APPickItem != null;
 	}
 	
 	public static void GiveChip(Chips chip) {
@@ -66,8 +66,10 @@ public static class ItemGiver {
 	}
 	
 	public static void GiveItemFromId(int id) {
-		APPickItem._ItemData = itemDictionary[id];
-		APPickItem.ExecutePickItem();
+		// Clone the saved interaction because they're not reusable
+		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem, APScene).Cast<InteractionPickItem>();
+		interaction._ItemData = itemDictionary[id];
+		interaction.ExecutePickItem();
 	}
 	
 	public static int FindItemCount(string variables) {
@@ -133,15 +135,16 @@ public static class ItemGiver {
 						APItemInteraction = APItemGO.GetComponent<InteractionPickItem>();
 						APItemInteraction._ItemData = UnityEngine.Object.Instantiate(laptopData).Cast<ItemData>();
 						APItemData = APItemInteraction._ItemData;
-						//UnityEngine.Object.DontDestroyOnLoad(APItemData);
 						if (APItemData == null) {
 							Melon<Randomizer>.Logger.Msg("The copy of laptopData is null");
 						} else {
 							Melon<Randomizer>.Logger.Msg("The copy of laptopData is not null");
 						}
-						APPickItem._AutoDisable = false;
+						APPickItem._SerializationData = null;
+						APPickItem._SerializationDataQuest = null;
+						APPickItem._SerializationDataState = null;
 						APItemData._NameID = "Randomized Item";
-						APItemData._DescriptionID = "A randomized item from Archipelago";
+						APItemData._DescriptionID = "A randomized item from Archipelago.";
 						sceneHandle = null;
 					}
 					else {
@@ -190,20 +193,7 @@ public static class ItemGiver {
 					inProgress = false;
 				}
 			}
-		} 
-		
-		// For now I just want to check out the AssetBundles
-		// Il2CppSystem.Collections.IEnumerable bundleList = 
-		// 	AssetBundle.GetAllLoadedAssetBundles().Cast<Il2CppSystem.Collections.IEnumerable>();
-		// foreach (Il2CppSystem.Object bundleObj in bundleList) {}
-		// 	// AssetBundle bundle = bundleObj.Cast<AssetBundle>();
-		// 	// Melon<Randomizer>.Logger.Msg("Bundle " + bundle.name);
-		// 	// Melon<Randomizer>.Logger.Msg("Streamed Scene Bundle: " + bundle.isStreamedSceneAssetBundle.ToString());
-		// 	// IEnumerable<string> assetNameList = bundle.GetAllAssetNames();
-		// 	// foreach (string assetName in assetNameList) {
-		// 	// 	Melon<Randomizer>.Logger.Msg("\t" + "Asset " + assetName);
-		// 	// }
-		// }
+		}
 	}
 	
 	public static void FillItemData() {
