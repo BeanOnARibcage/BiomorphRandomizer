@@ -18,8 +18,6 @@ public class Randomizer : MelonMod {
 		bool itemGiven;
 		updateCounter++;
 		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
-			Melon<Randomizer>.Logger.Msg(ItemGiver.APItemData == null);
-			Melon<Randomizer>.Logger.Msg(Object.ReferenceEquals(ItemGiver.APItemData, null));
 			itemGiven = SessionTools.CheckForAndReceiveItem();
 			while (itemGiven) {
 				itemGiven = SessionTools.CheckForAndReceiveItem();

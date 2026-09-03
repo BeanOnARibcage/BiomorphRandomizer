@@ -69,7 +69,7 @@ public static class SessionTools {
 			else {
 				item = Session.Items.DequeueItem();
 				itemsDequeued++;
-				ItemGiver.IntroGiveItemFromId((int)item.ItemId);
+				ItemGiver.GiveItemFromId((int)item.ItemId);
 				ItemsProcessed++;
 			}
 			return false;
