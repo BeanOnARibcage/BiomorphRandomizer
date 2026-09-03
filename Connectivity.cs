@@ -58,7 +58,7 @@ public static class SessionTools {
 		Session.SetGoalAchieved();
 	}
 	
-	// returns true if we should immediately check for the next item (ie if money was dequeued)
+	// returns true if we should immediately check for the next item (i.e. if money was dequeued)
 	public static bool CheckForAndReceiveItem() {
 		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem()) {
 			ItemInfo item;
@@ -72,7 +72,7 @@ public static class SessionTools {
 				ItemGiver.IntroGiveItemFromId((int)item.ItemId);
 				ItemsProcessed++;
 			}
-			return true;
+			return false;
 		}
 		return false;
 	}

@@ -15,9 +15,10 @@ namespace BiomorphRandomizer;
 [HarmonyPatch]
 public class Patches {
 	//ActionPickItem.StartExecution is called once (or twice?) per pickup, so that's a good one to patch
-	[HarmonyPatch(typeof(ActionPickItem), nameof(ActionPickItem.StartExecution))]
+	[HarmonyPatch(typeof(ActionPickItem), nameof(ActionPickItem.Execute))]
 	[HarmonyPrefix]
 	static void PickItem(ActionPickItem __instance) {
+		Melon<Randomizer>.Logger.Msg("ActionPickItem prefix entered");
 		InteractionPickItem interaction = __instance.Interaction;
 		if (interaction.name == "Prefab_Interaction_Money(Clone)") {
 			return;
@@ -29,7 +30,12 @@ public class Patches {
 		SessionTools.SendLocation(id);
 		interaction.ItemQuantity = 0;
 		interaction._ItemData = ItemGiver.APItemData;
-		//Melon<Randomizer>.Logger.Msg(__instance.Interaction.name);
+		Melon<Randomizer>.Logger.Msg(__instance.Interaction.name);
+		Melon<Randomizer>.Logger.Msg(__instance.Interaction != null);
+		Melon<Randomizer>.Logger.Msg(interaction.name);
+		Melon<Randomizer>.Logger.Msg(ItemGiver.APItemData != null);
+		Melon<Randomizer>.Logger.Msg(interaction._ItemData != null);
+		Melon<Randomizer>.Logger.Msg(interaction._ItemData.name);
 		return;
 	}
 	
@@ -93,6 +99,19 @@ public class Patches {
 	static void LogToggleA(string mapName, bool enable) {
 		Melon<Randomizer>.Logger.Msg("ToggleZoneActiveAsync mapName: " + mapName +
 			" enable: " + enable.ToString());
+	}
+	
+	[HarmonyPatch(typeof(PanelSwitcherUI), nameof(PanelSwitcherUI.UISwitchPanel))]
+	[HarmonyPrefix]
+	static void GetInteractions(PanelSwitcherUI __instance) {
+		if (__instance.name != "Start Game Button") {
+			return;
+		}
+		if (ItemGiver.APItemData != null) {
+			return;
+		}
+		ItemGiver.StartGetInteractions();
+		ItemGiver.FillItemData();
 	}
 	
 	// It should (hopefully) be fine to use ToggleZoneActiveAsync on individual rooms (true to load, false to unload)
