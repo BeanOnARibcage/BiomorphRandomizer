@@ -11,6 +11,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 using Il2CppLDS.Sardonyx.Actions;
+using System.Collections.Generic;
+using Il2CppLDS.Framework.Core;
 
 namespace BiomorphRandomizer;
 
@@ -19,8 +21,17 @@ public static class ItemGiver {
 	public static GameObject APPickItemGO = null;
 	public static InteractionPickItem APPickItem = null;
 	public static ItemData APItemData = null;
+	// use APPickItem for receiving items (subbing in the corresponding ItemData)
+	// use APItemData for sending locations (putting it into the game's existing InteractionPickItem)
+	
+	private static Dictionary<int, ItemData> itemDictionary;
 	
 	private static ItemData laptopData = null;
+	
+	public static bool CanGetItem() {
+		return GameManager.Hero.GetComponent<ActionPickItem>().CanExecute();
+		// I need to test whether this does what I want it to do
+	}
 	
 	public static void GiveChip(Chips chip) {
 		WeaponData chipData = InventoryHandler.ItemDatabase.Chips[(int)chip];
@@ -51,6 +62,11 @@ public static class ItemGiver {
 			InventoryHandler.UpdateItem(item, 1);
 		}
 		return;
+	}
+	
+	public static void GiveItemFromId(int id) {
+		APPickItem._ItemData = itemDictionary[id];
+		APPickItem.ExecutePickItem();
 	}
 	
 	public static int FindItemCount(string variables) {
@@ -101,7 +117,7 @@ public static class ItemGiver {
 					laptopData = APPickItem._ItemData;
 					APItemData = UnityEngine.Object.Instantiate(laptopData).Cast<ItemData>();
 					APPickItem._AutoDisable = false;
-					APItemData._NameID = "Archipelago Item";
+					APItemData._NameID = "Randomized Item";
 					APItemData._DescriptionID = "A randomized item from Archipelago";
 					sceneHandle = null;
 				}
@@ -151,6 +167,15 @@ public static class ItemGiver {
 		// 	// 	Melon<Randomizer>.Logger.Msg("\t" + "Asset " + assetName);
 		// 	// }
 		// }
+	}
+	
+	public static void FillItemData() {
+		itemDictionary = new Dictionary<int, ItemData>();
+		itemDictionary.Add(1, InventoryHandler.ItemDatabase.RawMaterials);
+		itemDictionary.Add(2, InventoryHandler.ItemDatabase.Laurentium);
+		itemDictionary.Add(3, InventoryHandler.ItemDatabase.VitalModules);
+		itemDictionary.Add(4, InventoryHandler.ItemDatabase.LogicBlocks);
+		itemDictionary.Add(5, (ItemData)InventoryHandler.ItemDatabase.MementoHorseshoeMagnet);
 	}
 }
 

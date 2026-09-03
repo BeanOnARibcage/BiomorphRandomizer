@@ -28,6 +28,7 @@ public class Patches {
 		}
 		SessionTools.SendLocation(id);
 		interaction.ItemQuantity = 0;
+		interaction._ItemData = ItemGiver.APItemData;
 		//Melon<Randomizer>.Logger.Msg(__instance.Interaction.name);
 		return;
 	}
@@ -94,5 +95,5 @@ public class Patches {
 			" enable: " + enable.ToString());
 	}
 	
-	// It should (hopefully) be fine to use ToggleZoneActiveAsyng on individual rooms (true to load, false to unload)
+	// It should (hopefully) be fine to use ToggleZoneActiveAsync on individual rooms (true to load, false to unload)
 }
