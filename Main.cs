@@ -10,10 +10,16 @@ public class Randomizer : MelonMod {
 		LoggerInstance.Msg("Randomizer Mod was loaded");
 		Preferences.CreatePreferences();
 		Preferences.LoadPreferences();
-		SessionTools.CreateSession();
+		if (Preferences.Enable.Value) {
+			SessionTools.CreateSession();
+		} else {
+			LoggerInstance.Msg("Randomizer disabled. Unpatching methods.");
+			this.HarmonyInstance.UnpatchSelf();
+		}
 	}
 	
 	public override void OnUpdate() {
+		if (!Preferences.Enable.Value) return;
 		ItemGiver.GetInteractions();
 		bool itemGiven;
 		updateCounter++;
