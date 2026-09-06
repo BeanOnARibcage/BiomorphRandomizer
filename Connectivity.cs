@@ -35,12 +35,15 @@ public static class SessionTools {
 			password: password);
 		if (result.Successful) {
 			Melon<Randomizer>.Logger.Msg("Connection successful");
+			LocationFinder.CheckForLocations();
 		}
 		else {
 			Melon<Randomizer>.Logger.Msg("Connection unsuccessful");
 		}
 		return;
 	}
+	
+	public static void Reconnect() {}
 	
 	public static bool CheckConnection() {
 		return Session.ConnectionInfo.Slot > -1;
@@ -69,7 +72,7 @@ public static class SessionTools {
 			else {
 				item = Session.Items.DequeueItem();
 				itemsDequeued++;
-				ItemGiver.GiveItemFromId((int)item.ItemId);
+				ItemGiver.GiveItemFromId(item.ItemId);
 				ItemsProcessed++;
 			}
 			return false;

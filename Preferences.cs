@@ -1,5 +1,7 @@
 using MelonLoader;
 
+namespace BiomorphRandomizer;
+
 public static class Preferences {
 	public static MelonPreferences_Category ConnectionInfo;
 	public static MelonPreferences_Entry<string> Host;

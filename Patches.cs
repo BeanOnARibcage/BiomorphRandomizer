@@ -46,12 +46,7 @@ public class Patches {
 		if (!SessionTools.CheckConnection()) {
 			SessionTools.Connect();
 		}
-		if (SessionTools.CheckConnection() && __instance._GameData != null) {
-			LocationsAlreadyFound locs = new LocationsAlreadyFound(__instance._GameData);
-			SessionTools.SendMultipleLocations(locs.LocationIds);
-			//int itemCount = ItemGiver.FindItemCount(__instance._GameData.Variables);
-			SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
-		}
+		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
 		if (SessionTools.CheckConnection()) {
 			SessionTools.ReceivingItemsOkay = true;
 		}
@@ -111,7 +106,8 @@ public class Patches {
 			return;
 		}
 		ItemGiver.StartGetInteractions();
-		ItemGiver.FillItemData();
+		LocationFinder.FillLocationDictionary();
+		// if this takes too long, it can be made async
 	}
 	
 	// It should (hopefully) be fine to use ToggleZoneActiveAsync on individual rooms (true to load, false to unload)

@@ -24,9 +24,14 @@ public class Randomizer : MelonMod {
 		bool itemGiven;
 		updateCounter++;
 		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
-			itemGiven = SessionTools.CheckForAndReceiveItem();
-			while (itemGiven) {
+			if (SessionTools.CheckConnection()) {	
 				itemGiven = SessionTools.CheckForAndReceiveItem();
+				while (itemGiven) {
+					itemGiven = SessionTools.CheckForAndReceiveItem();
+				}
+				LocationFinder.CheckForGoal();
+			} else {
+				SessionTools.Reconnect();
 			}
 			updateCounter = 0;
 		}

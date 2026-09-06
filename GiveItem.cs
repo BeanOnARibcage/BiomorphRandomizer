@@ -26,10 +26,6 @@ public static class ItemGiver {
 	// use APPickItem for receiving items (subbing in the corresponding ItemData)
 	// use APItemData for sending locations (putting it into the game's existing InteractionPickItem)
 	
-	private static Dictionary<int, ItemData> itemDictionary;
-	
-	private static ItemData laptopData = null;
-	
 	public static bool CanGetItem() {
 		return GameManager.CanUseInteractions && APPickItem != null;
 	}
@@ -65,10 +61,10 @@ public static class ItemGiver {
 		return;
 	}
 	
-	public static void GiveItemFromId(int id) {
+	public static void GiveItemFromId(long id) {
 		// Clone the saved interaction because they're not reusable
 		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem, APScene).Cast<InteractionPickItem>();
-		interaction._ItemData = itemDictionary[id];
+		interaction._ItemData = GetItemData(id);
 		interaction.ExecutePickItem();
 	}
 	
@@ -84,8 +80,9 @@ public static class ItemGiver {
 		}
 	}
 	
-	// I've essentially manually re-implemented the coroutine system here
-	// When I learn more about Unity's coroutine handling, I might switch
+	// Running the coroutines manually because Unity's system doesn't even
+	// give you a way to check if the coroutine is done, let alone get
+	// information from it (such as a reference to the scene that was loaded)
 	private static Il2CppSystem.Collections.IEnumerator coroutine1 = null;
 	private static Il2CppSystem.Collections.IEnumerator coroutine2 = null;
 	private static Il2CppSystem.Collections.IEnumerator coroutine3 = null;
@@ -130,10 +127,11 @@ public static class ItemGiver {
 							sceneHandle = null;
 							return;
 						}
-						laptopData = APPickItem._ItemData;
+						// Clone the entire GameObject again so that APItemData will have a reference in the il2cpp domain
+						// Otherwise it gets garbage collected there and then freezes the game when accessed here
 						APItemGO = UnityEngine.Object.Instantiate(APPickItemGO, APScene).Cast<GameObject>();
 						APItemInteraction = APItemGO.GetComponent<InteractionPickItem>();
-						APItemInteraction._ItemData = UnityEngine.Object.Instantiate(laptopData).Cast<ItemData>();
+						APItemInteraction._ItemData = UnityEngine.Object.Instantiate(GetItemData(1)).Cast<ItemData>();
 						APItemData = APItemInteraction._ItemData;
 						if (APItemData == null) {
 							Melon<Randomizer>.Logger.Msg("The copy of laptopData is null");
@@ -196,13 +194,33 @@ public static class ItemGiver {
 		}
 	}
 	
-	public static void FillItemData() {
-		itemDictionary = new Dictionary<int, ItemData>();
-		itemDictionary.Add(1, InventoryHandler.ItemDatabase.RawMaterials);
-		itemDictionary.Add(2, InventoryHandler.ItemDatabase.Laurentium);
-		itemDictionary.Add(3, InventoryHandler.ItemDatabase.VitalModules);
-		itemDictionary.Add(4, InventoryHandler.ItemDatabase.LogicBlocks);
-		itemDictionary.Add(5, (ItemData)InventoryHandler.ItemDatabase.MementoHorseshoeMagnet);
+	public static ItemData GetItemData(long id) {
+		int ones, hundreds;
+		ItemDatabase items = InventoryHandler.ItemDatabase;
+		hundreds = Math.DivRem((int)id, 100, out ones);
+		switch (hundreds) {
+			case 1: // Abilities
+				return items.Abilities[ones];
+			case 3: // Blueprints
+				return items.Blueprints[ones].Cast<ItemData>();
+			case 4: // Chips
+				return items.Chips[ones];
+			case 5: // Mementos
+				return items.Mementos[ones];
+			case 6: // Scargatos
+				return items.Scargatos[ones];
+			case 8: // Other key items
+				return items.KeyItems[ones];
+			case 0: // Other
+				if (ones == 1)
+					return items.Laptops.Cast<ItemData>();
+				else if (ones == 2)
+					return items.MementoSocket;
+				else
+					return null;
+			default:
+				return null;
+		}
 	}
 }
 
