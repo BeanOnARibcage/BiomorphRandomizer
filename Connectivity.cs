@@ -18,6 +18,8 @@ public static class SessionTools {
 	public static bool ReceivingItemsOkay = false;
 	public static int ItemsProcessed = 0;
 	
+	public static Dictionary<string, object> SlotData;
+	
 	public static void CreateSession() {
 		host = Preferences.Host.Value;
 		port = Preferences.Port.Value;
@@ -35,6 +37,8 @@ public static class SessionTools {
 			password: password);
 		if (result.Successful) {
 			Melon<Randomizer>.Logger.Msg("Connection successful");
+			ItemGiver.BruisersReceived = false;
+			SlotData = Session.DataStorage.GetSlotData();
 			LocationFinder.CheckForLocations();
 		}
 		else {
@@ -63,10 +67,14 @@ public static class SessionTools {
 	
 	// returns true if we should immediately check for the next item (i.e. if money was dequeued)
 	public static bool CheckForAndReceiveItem() {
-		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() && ItemGiver.APPickItem != null) {
+		if (ReceivingItemsOkay && CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() 
+			&& ItemGiver.APPickItem != null && SlotData != null) {
 			ItemInfo item;
 			if (ItemsProcessed > itemsDequeued) {
-				Session.Items.DequeueItem();
+				item = Session.Items.DequeueItem();
+				if (item.ItemId == 418) {
+					ItemGiver.BruisersReceived = true;
+				}
 				itemsDequeued++;
 			}
 			else {

@@ -26,6 +26,8 @@ public static class ItemGiver {
 	// use APPickItem for receiving items (subbing in the corresponding ItemData)
 	// use APItemData for sending locations (putting it into the game's existing InteractionPickItem)
 	
+	public static bool BruisersReceived = false;
+	
 	public static bool CanGetItem() {
 		return GameManager.CanUseInteractions && APPickItem != null;
 	}
@@ -62,6 +64,12 @@ public static class ItemGiver {
 	}
 	
 	public static void GiveItemFromId(long id) {
+		if (id == 418) {
+			BruisersReceived = true;
+		}
+		if (id == (long)SessionTools.SlotData["starting_weapon"]) {
+			return; // Starting weapon is always handled locally
+		}
 		// Clone the saved interaction because they're not reusable
 		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem, APScene).Cast<InteractionPickItem>();
 		interaction._ItemData = GetItemData(id);
