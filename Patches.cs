@@ -107,7 +107,6 @@ public class Patches {
 			// I don't think there's a way to make it give 0 of the item like with InteractionPickItem
 		}
 	}
-			
 	
 	[HarmonyPatch(typeof(SaveSlotUI), nameof(SaveSlotUI.UISaveSlotClick))]
 	[HarmonyPrefix]
@@ -116,6 +115,16 @@ public class Patches {
 		if (!SessionTools.CheckConnection()) {
 			SessionTools.Connect();
 		}
+		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
+		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
+		if (SessionTools.CheckConnection()) {
+			// SessionTools.ReceivingItemsOkay = true;
+		}
+	}
+	
+	[HarmonyPatch(typeof(PersistentDataManager), nameof(PersistentDataManager.ApplySaveData))]
+	[HarmonyPostfix]
+	static void ReadArchipelagoItems() {
 		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
 		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
 		if (SessionTools.CheckConnection()) {
@@ -155,7 +164,7 @@ public class Patches {
 		if (ItemGiver.APItemData != null) {
 			return;
 		}
-		ItemGiver.StartGetInteractions();
+		ItemGiver.MakeAPInteraction();
 		LocationFinder.FillLocationDictionary();
 		// if this takes too long, it can be made async
 	}

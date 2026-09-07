@@ -72,6 +72,7 @@ public static class ItemGiver {
 		}
 		// Clone the saved interaction because they're not reusable
 		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem, APScene).Cast<InteractionPickItem>();
+		interaction._ItemQuantity = 1;
 		interaction._ItemData = GetItemData(id);
 		interaction.ExecutePickItem();
 	}
@@ -88,6 +89,23 @@ public static class ItemGiver {
 		}
 	}
 	
+	private static void log(string message) {
+		Melon<Randomizer>.Logger.Msg(message);
+	}
+	
+	public static void MakeAPInteraction() {
+		APScene = SceneManager.GetSceneByName("Master");
+		APPickItemGO = new GameObject("Archipelago");
+		SceneManager.MoveGameObjectToScene(APPickItemGO, APScene);
+		APPickItem = APPickItemGO.AddComponent<InteractionPickItem>();
+		APPickItem._ShowNotification = true;
+		APItemData = UnityEngine.Object.Instantiate(InventoryHandler.ItemDatabase.Laptops).Cast<ItemData>();
+		APPickItem._ItemData = APItemData;
+		APItemData._NameID = "Randomized Item";
+		APItemData._DescriptionID = "A randomized item from Archipelago.";
+	}
+	
+	/*
 	// Running the coroutines manually because Unity's system doesn't even
 	// give you a way to check if the coroutine is done, let alone get
 	// information from it (such as a reference to the scene that was loaded)
@@ -201,6 +219,7 @@ public static class ItemGiver {
 			}
 		}
 	}
+	*/
 	
 	public static ItemData GetItemData(long id) {
 		int ones, hundreds;

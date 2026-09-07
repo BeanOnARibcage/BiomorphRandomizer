@@ -20,7 +20,7 @@ public class Randomizer : MelonMod {
 	
 	public override void OnUpdate() {
 		if (!Preferences.Enable.Value) return;
-		ItemGiver.GetInteractions();
+		//ItemGiver.GetInteractions();
 		bool itemGiven;
 		updateCounter++;
 		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
