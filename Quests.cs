@@ -1,9 +1,35 @@
 using Il2CppLDS.MindBreaker.Cinematics;
 using Il2CppPixelCrushers.DialogueSystem;
+using Il2CppLDS.MindBreaker.Data;
 
 namespace BiomorphRandomizer;
 
 public static class Quests {
+	
+	// side effect: Adds the location to LocationFinder.UnscoutedLocations if necessary
+	private static ItemData chooseItemData(long id) {
+		if (id < 0) {
+			return ItemGiver.APItemData;
+		}
+		ItemData itemData;
+		if (SessionTools.LocationScouts != null) {
+			Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
+			if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
+				itemData = ItemGiver.GetItemData(itemInfo.ItemId);
+			} else {
+				itemData = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
+				itemData._NameID = itemInfo.ItemDisplayName;
+				itemData._DescriptionID = "An item from another world. It belongs to " +
+					itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
+			}
+		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) { // these will always be local
+			itemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
+		} else {
+			itemData = ItemGiver.APItemData;
+			LocationFinder.UnscoutedLocations.Add(id);
+		}
+		return itemData;
+	}
 	
 	// BoydCS notes
 	// has properties _SerializationDataStateNCompleted where N is 0 through 5
@@ -21,13 +47,13 @@ public static class Quests {
 			long id = -1;
 			string completed2 = cinematic._SerializationDataState2Completed.VariableName;
 			if (!DialogueLua.GetVariable(completed2, false)) {
-				cinematic._BlueprintBoyd = ItemGiver.APItemData;
 				id = LocationFinder.IdFromSerializationData(completed2);
+				cinematic._BlueprintBoyd = chooseItemData(id);
 			} else if (DialogueLua.GetVariable(cinematic._SerializationDataState3Completed.VariableName, false)) {
 				string completed4 = cinematic._SerializationDataState4Completed.VariableName;
 				if (!DialogueLua.GetVariable(completed4, false)) {
-					cinematic._ItemDataSAFEUpgrade = ItemGiver.APItemData;
 					id = LocationFinder.IdFromSerializationData(completed4);
+					cinematic._ItemDataSAFEUpgrade = chooseItemData(id);
 				}
 			}				
 			if (id > 0) {
@@ -40,8 +66,8 @@ public static class Quests {
 	public static void HandleCinematic(Z00SQ02CS cinematic) {
 		string completed5 = cinematic._SerializationDataState5Completed.VariableName;
 		if (!DialogueLua.GetVariable(completed5, false)) {
-			cinematic._ItemDataChip = ItemGiver.APItemData;
 			long id = LocationFinder.IdFromSerializationData(completed5);
+			cinematic._ItemDataChip = chooseItemData(id);
 			if (id > 0) {
 				SessionTools.SendLocation(id);
 			}

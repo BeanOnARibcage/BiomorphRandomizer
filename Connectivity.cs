@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MelonLoader;
 using Archipelago.MultiClient.Net.Models;
 using System.Collections.Generic;
+using Archipelago.MultiClient.Net.Helpers;
 
 namespace BiomorphRandomizer;
 
@@ -15,10 +16,11 @@ public static class SessionTools {
 	private static int itemsDequeued = 0;
 	
 	public static ArchipelagoSession Session;
-	public static bool ReceivingItemsOkay = false;
 	public static int ItemsProcessed = 0;
 	
-	public static Dictionary<string, object> SlotData;
+	public static Dictionary<string, object> SlotData = null;
+	public static Dictionary<long, ScoutedItemInfo> LocationScouts = null;
+	public static Task<Dictionary<long, ScoutedItemInfo>> ScoutTask = null;
 	
 	public static void CreateSession() {
 		host = Preferences.Host.Value;
@@ -27,6 +29,9 @@ public static class SessionTools {
 	}
 	
 	public static void Connect() {
+		if (timeOfLastConnectionAttempt < 0) {
+			timeOfLastConnectionAttempt = 1;
+		}
 		LoginResult result;
 		password = Preferences.Password.Value;
 		slotname = Preferences.Slotname.Value;
@@ -39,7 +44,8 @@ public static class SessionTools {
 			Melon<Randomizer>.Logger.Msg("Connection successful");
 			ItemGiver.BruisersReceived = false;
 			SlotData = Session.DataStorage.GetSlotData();
-			LocationFinder.CheckForLocations();
+			ScoutTask = Session.Locations.ScoutLocationsAsync(
+				HintCreationPolicy.None, Session.Locations.AllLocations.ToArray());
 		}
 		else {
 			Melon<Randomizer>.Logger.Msg("Connection unsuccessful");
@@ -47,10 +53,45 @@ public static class SessionTools {
 		return;
 	}
 	
-	public static void Reconnect() {}
+	public static void ReceiveLocationScouts() {
+		if (ScoutTask.IsCompleted) {
+			if (ScoutTask.IsCompletedSuccessfully) {
+				LocationScouts = ScoutTask.Result;
+			} else {
+				Melon<Randomizer>.Logger.Msg("Scouts not received successfully");
+				Melon<Randomizer>.Logger.Msg("Status: " + ScoutTask.Status.ToString());
+				ScoutTask = null;
+			}
+		}
+	}
+			
+	private static float timeOfLastConnectionAttempt = 0;
+	private static Task reconnectionTask = null;
+	public static bool FirstConnectionAttempt = false;
+	
+	public static void Reconnect() {
+		if (!FirstConnectionAttempt) {
+			return;
+		}
+		if (reconnectionTask == null) {
+			if (UnityEngine.Time.fixedUnscaledTime > timeOfLastConnectionAttempt + 30) {
+				reconnectionTask = Task.Run(Connect);
+			}
+		} else if (reconnectionTask.IsCompleted) {
+			timeOfLastConnectionAttempt = UnityEngine.Time.fixedUnscaledTime;
+			reconnectionTask = null;
+		}
+		LocationFinder.CheckForLocations();
+	}
 	
 	public static bool CheckConnection() {
 		return Session.ConnectionInfo.Slot > -1;
+	}
+	
+	public static PlayerInfo ActivePlayer { 
+		get {
+			return Session.Players.ActivePlayer;
+		}
 	}
 	
 	public static void SendLocation(long id) {
@@ -67,20 +108,27 @@ public static class SessionTools {
 	
 	// returns true if we should immediately check for the next item (i.e. if money was dequeued)
 	public static bool CheckForAndReceiveItem() {
-		if (ReceivingItemsOkay && CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() 
+		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() 
 			&& ItemGiver.APPickItem != null && SlotData != null) {
 			ItemInfo item;
+			Melon<Randomizer>.Logger.Msg("Dequeueing item");
 			if (ItemsProcessed > itemsDequeued) {
 				item = Session.Items.DequeueItem();
 				if (item.ItemId == 418) {
 					ItemGiver.BruisersReceived = true;
 				}
 				itemsDequeued++;
+				Melon<Randomizer>.Logger.Msg("Skipping item " + item.ItemName);
 			}
 			else {
 				item = Session.Items.DequeueItem();
 				itemsDequeued++;
-				ItemGiver.GiveItemFromId(item.ItemId);
+				Melon<Randomizer>.Logger.Msg("Processing item " + item.ItemName);
+				bool local = item.Player.Equals(ActivePlayer);
+				if (local && !LocationFinder.IsLocationChecked(item.LocationId)) {
+					ItemGiver.ItemsBeforeLocations.Add(item.LocationId, item.ItemId);
+				}
+				ItemGiver.GiveItemFromId(item.ItemId, local, item.LocationId);
 				ItemsProcessed++;
 			}
 			return false;

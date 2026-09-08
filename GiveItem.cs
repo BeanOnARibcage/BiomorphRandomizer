@@ -21,12 +21,13 @@ public static class ItemGiver {
 	public static GameObject APPickItemGO = null;
 	public static InteractionPickItem APPickItem = null;
 	public static ItemData APItemData = null;
-	public static GameObject APItemGO = null;
-	public static InteractionPickItem APItemInteraction = null;
 	// use APPickItem for receiving items (subbing in the corresponding ItemData)
 	// use APItemData for sending locations (putting it into the game's existing InteractionPickItem)
 	
 	public static bool BruisersReceived = false;
+	public static Dictionary<long, long> ItemsBeforeLocations = new Dictionary<long, long>();
+	// for item packets with a local location that hasn't been checked in the game yet
+	// key is location ID and value is item ID
 	
 	public static bool CanGetItem() {
 		return GameManager.CanUseInteractions && APPickItem != null;
@@ -63,16 +64,27 @@ public static class ItemGiver {
 		return;
 	}
 	
-	public static void GiveItemFromId(long id) {
-		if (id == 418) {
-			BruisersReceived = true;
-		}
-		if (id == (long)SessionTools.SlotData["starting_weapon"]) {
-			return; // Starting weapon is always handled locally
-		}
+	public static void GiveItemFromId(long id, bool local, long locationId) {
 		// Clone the saved interaction because they're not reusable
 		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem, APScene).Cast<InteractionPickItem>();
 		interaction._ItemQuantity = 1;
+		if (id == 418) {
+			BruisersReceived = true;
+			if (!LocationFinder.StartingWeaponFound()) {
+				interaction._ItemQuantity = 0;
+			} // Having the bruisers before entering Z03_03 from the lower left locks you behind a door
+		}
+		if (id == (long)SessionTools.SlotData["starting_weapon"]) {
+			Melon<Randomizer>.Logger.Msg("Item " + id.ToString() + " is the starting weapon");
+			return; // Starting weapon is always handled locally
+		}
+		if (local && !LocationFinder.UnscoutedLocations.Contains(locationId)) {
+			Melon<Randomizer>.Logger.Msg("Item " + id.ToString() + " is considered local");
+			Melon<Randomizer>.Logger.Msg("bool local is " + local.ToString());
+			Melon<Randomizer>.Logger.Msg("UnscoutedLocations.Contains(id) is " + LocationFinder.UnscoutedLocations.Contains(locationId).ToString());
+			return; // location was scouted and handled locally
+		}
+		Melon<Randomizer>.Logger.Msg("Granting item " + id.ToString());
 		interaction._ItemData = GetItemData(id);
 		interaction.ExecutePickItem();
 	}
@@ -104,122 +116,6 @@ public static class ItemGiver {
 		APItemData._NameID = "Randomized Item";
 		APItemData._DescriptionID = "A randomized item from Archipelago.";
 	}
-	
-	/*
-	// Running the coroutines manually because Unity's system doesn't even
-	// give you a way to check if the coroutine is done, let alone get
-	// information from it (such as a reference to the scene that was loaded)
-	private static Il2CppSystem.Collections.IEnumerator coroutine1 = null;
-	private static Il2CppSystem.Collections.IEnumerator coroutine2 = null;
-	private static Il2CppSystem.Collections.IEnumerator coroutine3 = null;
-	private static AsyncOperationHandle<SceneInstance> sceneHandle = null;
-	private static bool loading = false;
-	private static bool waiting = false;
-	private static bool inProgress = false;
-	
-	public static void StartGetInteractions() {
-		if (inProgress) {
-			return;
-		}
-		coroutine1 = SceneHandler.ToggleZoneActiveAsync("Z04_10", true);
-		inProgress = true;
-		loading = true;
-		waiting = false;
-	}
-	
-	public static void GetInteractions() {
-		if (coroutine1 != null) {
-			if (sceneHandle != null && sceneHandle.IsDone) {
-				waiting = false;
-				try {
-					if (loading) {
-						Melon<Randomizer>.Logger.Msg("Point 1");
-						//CreateSceneParameters csp = new CreateSceneParameters();
-						Melon<Randomizer>.Logger.Msg("Point 1.1");
-						//APScene = SceneManager.CreateScene("Archipelago", csp); // may have been stripped
-						APScene = SceneManager.GetSceneByName("Master");
-						Melon<Randomizer>.Logger.Msg("Point 1.2");
-						GameObject laptopInteraction = GameObject.Find("/Root/GameplayAssets/Loot/Prefab_Interaction_LogBook");
-						if (laptopInteraction == null) {
-							Melon<Randomizer>.Logger.Msg("Unable to find the interaction GameObject");
-							sceneHandle = null;
-							return;
-						}
-						// UnityEngine.Object.Instantiate makes a clone
-						APPickItemGO = UnityEngine.Object.Instantiate(laptopInteraction, APScene).Cast<GameObject>();
-						APPickItem = APPickItemGO.GetComponent<InteractionPickItem>();
-						if (APPickItem == null) {
-							Melon<Randomizer>.Logger.Msg("The found GameObject does not have an InteractionPickItem");
-							sceneHandle = null;
-							return;
-						}
-						// Clone the entire GameObject again so that APItemData will have a reference in the il2cpp domain
-						// Otherwise it gets garbage collected there and then freezes the game when accessed here
-						APItemGO = UnityEngine.Object.Instantiate(APPickItemGO, APScene).Cast<GameObject>();
-						APItemInteraction = APItemGO.GetComponent<InteractionPickItem>();
-						APItemInteraction._ItemData = UnityEngine.Object.Instantiate(GetItemData(1)).Cast<ItemData>();
-						APItemData = APItemInteraction._ItemData;
-						if (APItemData == null) {
-							Melon<Randomizer>.Logger.Msg("The copy of laptopData is null");
-						} else {
-							Melon<Randomizer>.Logger.Msg("The copy of laptopData is not null");
-						}
-						APPickItem._SerializationData = null;
-						APPickItem._SerializationDataQuest = null;
-						APPickItem._SerializationDataState = null;
-						APItemData._NameID = "Randomized Item";
-						APItemData._DescriptionID = "A randomized item from Archipelago.";
-						sceneHandle = null;
-					}
-					else {
-						Melon<Randomizer>.Logger.Msg("Point 2");
-						sceneHandle = null;
-					}
-				} 
-				finally {
-					sceneHandle = null;
-				}
-			}
-			else if (waiting) {
-				Melon<Randomizer>.Logger.Msg("Point 3");
-				return;
-			}
-			else if (coroutine3 != null && coroutine3.MoveNext()) {
-				Melon<Randomizer>.Logger.Msg("Point 4");
-				if (Il2CppType.TypeFromPointer(coroutine3.Current.ObjectClass)
-					== Il2CppType.Of<AsyncOperationHandle<SceneInstance>>()) {
-					Melon<Randomizer>.Logger.Msg("Point 5");
-					sceneHandle = coroutine3.Current.Cast<AsyncOperationHandle<SceneInstance>>();
-					waiting = true;
-				}
-			}
-			else if (coroutine2 != null && coroutine2.MoveNext()) {
-				Melon<Randomizer>.Logger.Msg("Point 6");
-				coroutine3 = coroutine2.Current.Cast<Il2CppSystem.Collections.IEnumerator>();
-			}
-			else if (coroutine1.MoveNext()) {
-				Melon<Randomizer>.Logger.Msg("Point 7");
-				coroutine2 = coroutine1.Current.Cast<Il2CppSystem.Collections.IEnumerator>();
-			}
-			else if (coroutine2 != null && coroutine3 != null && sceneHandle == null) {
-				if (loading) {
-					Melon<Randomizer>.Logger.Msg("Point 8");
-					coroutine1 = SceneHandler.ToggleZoneActiveAsync("Z04_10", false);
-					coroutine2 = null;
-					coroutine3 = null;
-					loading = false;
-				}
-				else {
-					Melon<Randomizer>.Logger.Msg("Point 9");
-					coroutine1 = null;
-					coroutine2 = null;
-					coroutine3 = null;
-					inProgress = false;
-				}
-			}
-		}
-	}
-	*/
 	
 	public static ItemData GetItemData(long id) {
 		int ones, hundreds;

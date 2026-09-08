@@ -5,6 +5,13 @@ using Il2CppPixelCrushers.DialogueSystem;
 namespace BiomorphRandomizer;
 
 public static class LocationFinder {
+	public static List<long> UnscoutedLocations = new List<long>();
+	// for locations which were checked without the scout and got the generic "Archipelago Item"
+	
+	public static bool StartingWeaponFound() {
+		return DialogueLua.GetVariable("SerializationData_Z03_Weapons", false);
+	}
+	
 	public static long IntroIdFromInteractionName(string interaction_name) {
 		if (interaction_name == "Prefab_Interaction_RawMaterials_Z03_01") {
 			return 1;
@@ -25,6 +32,7 @@ public static class LocationFinder {
 	}
 	
 	private static Dictionary<string, long> locationDictionary;
+	private static Dictionary<long, string> reverseLocationDictionary;
 	
 	public static long IdFromSerializationData(string data) {
 		if (locationDictionary.ContainsKey(data)) {
@@ -33,9 +41,6 @@ public static class LocationFinder {
 			return -1;
 		}
 	}
-	
-	// I'll move the LocationsAlreadyFound functionality here
-	// It doesn't need to have multiple instances of a separate class
 	
 	public static void CheckForGoal() {
 		if (DialogueLua.GetVariable("Quest.MQ02_State0_Completed", false) && SessionTools.CheckConnection()) {
@@ -51,10 +56,16 @@ public static class LocationFinder {
 		}
 	}
 	
+	public static bool IsLocationChecked(long id) {
+		string serializationData = reverseLocationDictionary[id];
+		return DialogueLua.GetVariable(serializationData, false);
+	}
+	
 	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17, 18, 19});
 	
 	public static void FillLocationDictionary() {
 		locationDictionary = new Dictionary<string, long>();
+		reverseLocationDictionary = new Dictionary<long, string>();
 		
 		// Core's Lab
 		locationDictionary.Add("SerializationData_Z03_Weapons", 301);
@@ -90,29 +101,9 @@ public static class LocationFinder {
 		
 		// Mezzo Skyway
 		locationDictionary.Add("SerializationData_Z04_Quest_Wrench_01", 401);
+		
+		foreach (KeyValuePair<string, long> pair in locationDictionary) {
+			reverseLocationDictionary.Add(pair.Value, pair.Key);
+		}
 	}
 }
-
-/*
-public class LocationsAlreadyFound {
-	public List<long> LocationIds = new List<long>();
-	
-	public void CheckForLocations(GameData gameData) {
-		if (DialogueLua.GetVariable("SerializationData_Z03_RawMaterial_01", false))
-			LocationIds.Add(1);
-		if (DialogueLua.GetVariable("SerializationData_Z03_Laurentium_01", false))
-			LocationIds.Add(2);
-		if (DialogueLua.GetVariable("SerializationData_Z03_VitalModule_01", false))
-			LocationIds.Add(3);
-		if (DialogueLua.GetVariable("SerializationData_Z03_LogicBlocks_01", false))
-			LocationIds.Add(4);
-		if (DialogueLua.GetVariable("SerializationData_Memento_02", false))
-			LocationIds.Add(5);
-		return;
-	}
-	
-	public LocationsAlreadyFound(GameData gameData) {
-		CheckForLocations(gameData);
-	}
-}
-*/

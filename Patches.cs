@@ -1,5 +1,4 @@
 using HarmonyLib;
-using System.Threading.Tasks;
 using Il2CppLDS.Sardonyx.Actions;
 using MelonLoader;
 using Il2CppLDS.Sardonyx.Actors;
@@ -14,16 +13,16 @@ using Il2CppLDS.MindBreaker.Cinematics;
 using Il2CppLDS.MindBreaker.Actions;
 using Il2CppInterop.Runtime;
 using Il2CppLDS.Framework.Cinematics;
+using Il2CppLDS.Framework.AttributeModifiers;
 
 namespace BiomorphRandomizer;
 
 [HarmonyPatch]
 public class Patches {
-	//ActionPickItem.StartExecution is called once (or twice?) per pickup, so that's a good one to patch
+	// ActionPickItem.StartExecution is called once per pickup, so that's a good one to patch
 	[HarmonyPatch(typeof(ActionPickItem), nameof(ActionPickItem.StartExecution))]
 	[HarmonyPrefix]
 	static bool PickItem(ActionPickItem __instance) {
-		Melon<Randomizer>.Logger.Msg("ActionPickItem prefix entered");
 		InteractionPickItem interaction = __instance.Interaction;
 		if (!interaction._ShowNotification) { // Should always be money
 			return true;
@@ -45,15 +44,28 @@ public class Patches {
 			return true;
 		}
 		SessionTools.SendLocation(id);
-		interaction.ItemQuantity = 0;
-		interaction._ItemData = ItemGiver.APItemData;
+		if (SessionTools.LocationScouts != null) {
+			Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
+			if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
+				interaction._ItemData = ItemGiver.GetItemData(itemInfo.ItemId);
+			} else {
+				ItemData remoteItem = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
+				remoteItem._NameID = itemInfo.ItemDisplayName;
+				remoteItem._DescriptionID = "An item from another world. It belongs to " +
+					itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
+				interaction._ItemData = remoteItem;
+				interaction.ItemQuantity = 0;
+			}
+		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) { // these will always be local
+			interaction._ItemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
+		} else {
+			interaction._ItemData = ItemGiver.APItemData;
+			interaction.ItemQuantity = 0;
+			LocationFinder.UnscoutedLocations.Add(id);
+		}
 		return true;
 	}
 	
-	// [HarmonyPatch(typeof(SaveHandler))]
-	// [HarmonyPatch(nameof(SaveHandler.Autosave))]
-	// [HarmonyPatch(new Type[] {typeof(UnityEngine.Vector2),typeof(bool),typeof(string),typeof(bool),typeof(bool)})]
-	// [HarmonyPrefix]
 	[HarmonyPatch(typeof(Z03MeleeWeapon2CS), nameof(Z03MeleeWeapon2CS.PostSequenceInternal))]
 	[HarmonyPrefix]
 	static void ManageStartingWeapon() {
@@ -91,6 +103,25 @@ public class Patches {
 		}
 	}
 	
+	[HarmonyPatch(typeof(Z03CaptureCS), nameof(Z03CaptureCS.PostSequenceInternal))]
+	[HarmonyPostfix]
+	static void BreakTube() {
+		GameObject tubeGO = GameObject.Find("/Root/States/Prefab_GO_Z03_FerroxVatCS");
+		Attributes tubeAttributes = tubeGO.GetComponent<Attributes>();
+		tubeAttributes.Health = 1;
+		// May need Health=0 for certain starting weapons
+	}
+	
+	[HarmonyPatch(typeof(Attributes), nameof(Attributes.OnEnable))]
+	[HarmonyPostfix]
+	static void BreakPath(Attributes __instance) {
+		if (__instance.name == "Prefab_Destructible_Path_z03_01(Clone)" &&
+		ProgressHandler.BeaconActivated > 0) {
+			__instance.Health = 0;
+			return;
+		}
+	}
+	
 	[HarmonyPatch(typeof(ActionInteractionShop), nameof(ActionInteractionShop.StartExecution))]
 	[HarmonyPrefix]
 	static void Shop(ActionInteractionShop __instance) {
@@ -103,33 +134,71 @@ public class Patches {
 				return;
 			}
 			// SessionTools.SendLocation(id); need to check whether they actually buy the item
-			shopItemData._ItemData = ItemGiver.APItemData;
+			if (SessionTools.LocationScouts != null) {
+				if (!SessionTools.LocationScouts.ContainsKey(id)) {
+					return;
+					// this happens for not-unlocked shop items (like Asrar has) that aren't
+					// locations in the multiworld
+				}
+				Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
+				if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
+					shopItemData._ItemData = ItemGiver.GetItemData(itemInfo.ItemId);
+				} else {
+					ItemData remoteItem = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
+					remoteItem._NameID = itemInfo.ItemDisplayName;
+					remoteItem._DescriptionID = "An item from another world. It belongs to " +
+						itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
+					shopItemData._ItemData = remoteItem;
+				}
+			} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) { // these will always be local
+				shopItemData._ItemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
+			} else {
+				shopItemData._ItemData = ItemGiver.APItemData;
+			}
 			// I don't think there's a way to make it give 0 of the item like with InteractionPickItem
+		}
+	}
+	
+	[HarmonyPatch(typeof(ShopScreen), nameof(ShopScreen.OnShopPurchaseSuccess))]
+	[HarmonyPrefix]
+	static void SendShopLocation(ShopItemData shopItemData) {
+		long id = LocationFinder.IdFromSerializationData(shopItemData.VariableName);
+		if (id < 0) {
+			return;
+		}
+		SessionTools.SendLocation(id);
+		if (shopItemData._ItemData == ItemGiver.APItemData) {
+			LocationFinder.UnscoutedLocations.Add(id);
 		}
 	}
 	
 	[HarmonyPatch(typeof(SaveSlotUI), nameof(SaveSlotUI.UISaveSlotClick))]
 	[HarmonyPrefix]
 	static void Connect(SaveSlotUI __instance) {
-		SessionTools.ReceivingItemsOkay = false;
-		if (!SessionTools.CheckConnection()) {
-			SessionTools.Connect();
-		}
-		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
-		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
-		if (SessionTools.CheckConnection()) {
-			// SessionTools.ReceivingItemsOkay = true;
-		}
 	}
 	
 	[HarmonyPatch(typeof(PersistentDataManager), nameof(PersistentDataManager.ApplySaveData))]
 	[HarmonyPostfix]
-	static void ReadArchipelagoItems() {
+	static void ReadArchipelagoData() {
 		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
 		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
 		if (SessionTools.CheckConnection()) {
-			SessionTools.ReceivingItemsOkay = true;
+			LocationFinder.CheckForLocations();
 		}
+		if (DialogueLua.DoesVariableExist("Archipelago_UnscoutedLocations") &&
+			DialogueLua.GetVariable("Archipelago_UnscoutedLocations").isTable) {
+			LocationFinder.UnscoutedLocations = TableHandler.TableToList(
+				DialogueLua.GetVariable("Archipelago_UnscoutedLocations").asTable.luaTable);
+		}
+		if (DialogueLua.DoesVariableExist("Archipelago_ItemsBeforeLocations") &&
+			DialogueLua.GetVariable("Archipelago_ItemsBeforeLocations").isTable) {
+			ItemGiver.ItemsBeforeLocations = TableHandler.TableToDict(
+				DialogueLua.GetVariable("Archipelago_ItemsBeforeLocations").asTable.luaTable);
+		}
+		if (!SessionTools.CheckConnection()) {
+			SessionTools.Connect();
+		}
+		SessionTools.FirstConnectionAttempt = true;
 	}
 	
 	[HarmonyPatch(typeof(ActionCinematic), nameof(ActionCinematic.StartExecution))]
@@ -153,6 +222,18 @@ public class Patches {
 	static void RecordItemsProcessed() {
 		Melon<Randomizer>.Logger.Msg("SaveGame called");
 		DialogueLua.SetVariable("Archipelago_Items", SessionTools.ItemsProcessed);
+		if (LocationFinder.UnscoutedLocations.Count > 0) {
+			DialogueLua.SetVariable("Archipelago_UnscoutedLocations",
+				TableHandler.ListToTable(LocationFinder.UnscoutedLocations));
+		} else {
+			DialogueLua.SetVariable("Archipelago_UnscoutedLocations", new Il2CppLanguage.Lua.LuaNil());
+		}
+		if (ItemGiver.ItemsBeforeLocations.Count > 0) {
+			DialogueLua.SetVariable("Archipelago_ItemsBeforeLocations",
+				TableHandler.DictToTable(ItemGiver.ItemsBeforeLocations));
+		} else {
+			DialogueLua.SetVariable("Archipelago_ItemsBeforeLocations", new Il2CppLanguage.Lua.LuaNil());
+		}
 	}
 	
 	[HarmonyPatch(typeof(PanelSwitcherUI), nameof(PanelSwitcherUI.UISwitchPanel))]
@@ -168,44 +249,12 @@ public class Patches {
 		LocationFinder.FillLocationDictionary();
 		// if this takes too long, it can be made async
 	}
-	
-	// It should (hopefully) be fine to use ToggleZoneActiveAsync on individual rooms (true to load, false to unload)
 	/*
-	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.CoroutineToggleZone))]
-	[HarmonyPrefix]
-	static void LogToggleZone(string zone, bool enable) {
-		Melon<Randomizer>.Logger.Msg("CoroutineToggleZone zone: " + zone + " enable: " + enable.ToString());
-	}
-	
-	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
-	[HarmonyPrefix]
-	static void LogLMIA(string zone) {
-		Melon<Randomizer>.Logger.Msg("LoadMapsInternalAsync zone: " + zone);
-	}
-	
-	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ReloadZone))]
-	[HarmonyPrefix]
-	static void LogReload(string zone) {
-		Melon<Randomizer>.Logger.Msg("ReloadZone zone: " + zone);
-	}
-	
-	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ReloadZoneInternal))]
-	[HarmonyPrefix]
-	static void LogReloadInternal(string zone) {
-		Melon<Randomizer>.Logger.Msg("ReloadZoneInternal zone: " + zone);
-	}
-	
-	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActive))]
-	[HarmonyPrefix]
-	static void LogToggle(MapData map, bool enable) {
-		Melon<Randomizer>.Logger.Msg("ToggleZoneActive map: " + map.ToString() + " enable: " + enable.ToString());
-	}
-	
-	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActiveAsync))]
-	[HarmonyPrefix]
-	static void LogToggleA(string mapName, bool enable) {
-		Melon<Randomizer>.Logger.Msg("ToggleZoneActiveAsync mapName: " + mapName +
-			" enable: " + enable.ToString());
+	[HarmonyPatch(typeof(DialogueLua), nameof(DialogueLua.SetVariable))]
+	[HarmonyPostfix]
+	static void LogSetVariable(string variable) {
+		Melon<Randomizer>.Logger.Msg("Variable " + variable + " is " +
+			DialogueLua.GetVariable(variable).AsString);
 	}
 	*/
 }
