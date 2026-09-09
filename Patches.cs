@@ -255,14 +255,52 @@ public class Patches {
 		// if this takes too long, it can be made async
 	}
 	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
+	[HarmonyPrefix]
+	static void SetQuestVariables(string zone) {
+		Quests.SetQuestVariables(zone);
+	}
+	
+	/*
+	// Methods to log the scene-loading functions
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.CoroutineToggleZone))]
+	[HarmonyPrefix]
+	static void LogToggleZone(string zone, bool enable) {
+		Melon<Randomizer>.Logger.Msg("CoroutineToggleZone zone: " + zone + " enable: " + enable.ToString());
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
+	[HarmonyPrefix]
+	static void LogLMIA(string zone) {
+		Melon<Randomizer>.Logger.Msg("LoadMapsInternalAsync zone: " + zone);
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ReloadZone))]
+	[HarmonyPrefix]
+	static void LogReload(string zone) {
+		Melon<Randomizer>.Logger.Msg("ReloadZone zone: " + zone);
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ReloadZoneInternal))]
+	[HarmonyPrefix]
+	static void LogReloadInternal(string zone) {
+		Melon<Randomizer>.Logger.Msg("ReloadZoneInternal zone: " + zone);
+	}
+	
 	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActive))]
 	[HarmonyPrefix]
-	static void SetQuestVariables(MapData map, bool enable) {
-		if (enable) {
-			string mapName = map.name;
-			Quests.SetQuestVariables(mapName);
-		}
+	static void LogToggle(MapData map, bool enable) {
+		Melon<Randomizer>.Logger.Msg("ToggleZoneActive map: " + map.ToString() + " enable: " + enable.ToString());
 	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActiveAsync))]
+	[HarmonyPrefix]
+	static void LogToggleA(string mapName, bool enable) {
+		Melon<Randomizer>.Logger.Msg("ToggleZoneActiveAsync mapName: " + mapName +
+			" enable: " + enable.ToString());
+	}
+	*/
+	
 	/*
 	[HarmonyPatch(typeof(DialogueLua), nameof(DialogueLua.SetVariable))]
 	[HarmonyPostfix]
