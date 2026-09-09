@@ -111,19 +111,16 @@ public static class SessionTools {
 		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() 
 			&& ItemGiver.APPickItem != null && SlotData != null) {
 			ItemInfo item;
-			Melon<Randomizer>.Logger.Msg("Dequeueing item");
 			if (ItemsProcessed > itemsDequeued) {
 				item = Session.Items.DequeueItem();
 				if (item.ItemId == 418) {
 					ItemGiver.BruisersReceived = true;
 				}
 				itemsDequeued++;
-				Melon<Randomizer>.Logger.Msg("Skipping item " + item.ItemName);
 			}
 			else {
 				item = Session.Items.DequeueItem();
 				itemsDequeued++;
-				Melon<Randomizer>.Logger.Msg("Processing item " + item.ItemName);
 				bool local = item.Player.Equals(ActivePlayer);
 				if (local && !LocationFinder.IsLocationChecked(item.LocationId)) {
 					ItemGiver.ItemsBeforeLocations.Add(item.LocationId, item.ItemId);

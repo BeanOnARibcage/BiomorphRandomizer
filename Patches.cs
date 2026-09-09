@@ -76,9 +76,9 @@ public class Patches {
 			return;
 		} else {
 			long startingWeaponId = (long)SessionTools.SlotData["starting_weapon"];
-			WeaponData startingWeapon = ItemGiver.GetItemData(startingWeaponId).Cast<WeaponData>();
-			ItemData bruisers = ItemGiver.GetItemData(418);
-			InventoryHandler.UpdateItem(bruisers, 0);
+			WeaponData startingWeapon = ItemGiver.GetItemData(startingWeaponId, false).Cast<WeaponData>();
+			ItemData bruisers = ItemGiver.GetItemData(418, false);
+			//InventoryHandler.UpdateItem(bruisers, 0);
 			
 			InventoryHandler.EquippedChip0 = startingWeapon;
 			InventoryHandler.BaseHeroAttacks[0] = startingWeapon;
@@ -98,7 +98,7 @@ public class Patches {
 	[HarmonyPrefix]
 	static void RemoveBruisers() {
 		if (!ItemGiver.BruisersReceived) {
-			ItemData bruisers = ItemGiver.GetItemData(418);
+			ItemData bruisers = ItemGiver.GetItemData(418, false);
 			InventoryHandler.UpdateItem(bruisers, 0);
 		}
 	}
@@ -142,7 +142,7 @@ public class Patches {
 				}
 				Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
 				if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
-					shopItemData._ItemData = ItemGiver.GetItemData(itemInfo.ItemId);
+					shopItemData._ItemData = ItemGiver.GetItemData(itemInfo.ItemId, false);
 				} else {
 					ItemData remoteItem = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
 					remoteItem._NameID = itemInfo.ItemDisplayName;
@@ -151,7 +151,7 @@ public class Patches {
 					shopItemData._ItemData = remoteItem;
 				}
 			} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) { // these will always be local
-				shopItemData._ItemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
+				shopItemData._ItemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id], false);
 			} else {
 				shopItemData._ItemData = ItemGiver.APItemData;
 			}
@@ -165,6 +165,11 @@ public class Patches {
 		long id = LocationFinder.IdFromSerializationData(shopItemData.VariableName);
 		if (id < 0) {
 			return;
+		}
+		if (SessionTools.LocationScouts != null && SessionTools.LocationScouts.ContainsKey(id)) {
+			Quests.CheckForQuestItem(SessionTools.LocationScouts[id].ItemId);
+		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) {
+			Quests.CheckForQuestItem(ItemGiver.ItemsBeforeLocations[id]);
 		}
 		SessionTools.SendLocation(id);
 		if (shopItemData._ItemData == ItemGiver.APItemData) {
@@ -248,6 +253,15 @@ public class Patches {
 		ItemGiver.MakeAPInteraction();
 		LocationFinder.FillLocationDictionary();
 		// if this takes too long, it can be made async
+	}
+	
+	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.ToggleZoneActive))]
+	[HarmonyPrefix]
+	static void SetQuestVariables(MapData map, bool enable) {
+		if (enable) {
+			string mapName = map.name;
+			Quests.SetQuestVariables(mapName);
+		}
 	}
 	/*
 	[HarmonyPatch(typeof(DialogueLua), nameof(DialogueLua.SetVariable))]

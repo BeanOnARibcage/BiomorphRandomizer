@@ -6,6 +6,33 @@ namespace BiomorphRandomizer;
 
 public static class Quests {
 	
+	public static void SetQuestVariables(string map) {
+		switch (map) {
+			case "Z00_02":
+				// Boyd's quest
+				DialogueLua.SetVariable("Quest.SQ02_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ02_State1_Item", false));
+				goto case "Z03_06";
+			case "Z04_01":
+				DialogueLua.SetVariable("Quest.SQ02_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ02_State1_Location", false));
+				return;
+			case "Z03_06":
+				DialogueLua.SetVariable("Global.SAFEUpgradeUnlocked",
+					DialogueLua.GetVariable("Quest.SQ02_State4_Completed", false) &&
+					DialogueLua.GetVariable("Global.SAFEKits", 0) > 0);
+				return;
+		}
+	}
+	
+	public static void CheckForQuestItem(long id) {
+		switch (id) {
+			case 820:
+				DialogueLua.SetVariable("Archipelago_SQ02_State1_Item", true);
+				return;
+		}
+	}
+	
 	// side effect: Adds the location to LocationFinder.UnscoutedLocations if necessary
 	private static ItemData chooseItemData(long id) {
 		if (id < 0) {
@@ -43,10 +70,12 @@ public static class Quests {
 	// State 5 Completed is true after upgrading the SAFE and getting the executioner
 	
 	public static void HandleCinematic(BoydCS cinematic) {
-		if (DialogueLua.GetVariable(cinematic._SerializationDataState1Completed.VariableName, false)) {
+		if (DialogueLua.GetVariable(cinematic._SerializationDataState0Completed.VariableName, false) &&
+			DialogueLua.GetVariable(cinematic._SerializationDataState1Completed.VariableName, false)) {
 			long id = -1;
 			string completed2 = cinematic._SerializationDataState2Completed.VariableName;
 			if (!DialogueLua.GetVariable(completed2, false)) {
+				DialogueLua.SetVariable("Archipelago_SQ02_State2_Location", true);
 				id = LocationFinder.IdFromSerializationData(completed2);
 				cinematic._BlueprintBoyd = chooseItemData(id);
 			} else if (DialogueLua.GetVariable(cinematic._SerializationDataState3Completed.VariableName, false)) {

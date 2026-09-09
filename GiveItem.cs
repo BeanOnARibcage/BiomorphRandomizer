@@ -75,16 +75,11 @@ public static class ItemGiver {
 			} // Having the bruisers before entering Z03_03 from the lower left locks you behind a door
 		}
 		if (id == (long)SessionTools.SlotData["starting_weapon"]) {
-			Melon<Randomizer>.Logger.Msg("Item " + id.ToString() + " is the starting weapon");
 			return; // Starting weapon is always handled locally
 		}
 		if (local && !LocationFinder.UnscoutedLocations.Contains(locationId)) {
-			Melon<Randomizer>.Logger.Msg("Item " + id.ToString() + " is considered local");
-			Melon<Randomizer>.Logger.Msg("bool local is " + local.ToString());
-			Melon<Randomizer>.Logger.Msg("UnscoutedLocations.Contains(id) is " + LocationFinder.UnscoutedLocations.Contains(locationId).ToString());
 			return; // location was scouted and handled locally
 		}
-		Melon<Randomizer>.Logger.Msg("Granting item " + id.ToString());
 		interaction._ItemData = GetItemData(id);
 		interaction.ExecutePickItem();
 	}
@@ -118,6 +113,13 @@ public static class ItemGiver {
 	}
 	
 	public static ItemData GetItemData(long id) {
+		return GetItemData(id, true);
+	}
+	
+	public static ItemData GetItemData(long id, bool itemIsBeingGranted) {
+		if (itemIsBeingGranted) {
+			Quests.CheckForQuestItem(id);
+		}
 		int ones, hundreds;
 		ItemDatabase items = InventoryHandler.ItemDatabase;
 		hundreds = Math.DivRem((int)id, 100, out ones);
