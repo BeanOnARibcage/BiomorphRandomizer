@@ -14,6 +14,7 @@ using Il2CppLDS.MindBreaker.Actions;
 using Il2CppInterop.Runtime;
 using Il2CppLDS.Framework.Cinematics;
 using Il2CppLDS.Framework.AttributeModifiers;
+using Il2CppLDS.Framework.Actors;
 
 namespace BiomorphRandomizer;
 
@@ -44,6 +45,8 @@ public class Patches {
 			return true;
 		}
 		SessionTools.SendLocation(id);
+		interaction._ItemData = LocationFinder.ItemBeingFound(id, true);
+		/*
 		if (SessionTools.LocationScouts != null) {
 			Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
 			if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
@@ -63,6 +66,7 @@ public class Patches {
 			interaction.ItemQuantity = 0;
 			LocationFinder.UnscoutedLocations.Add(id);
 		}
+		*/
 		return true;
 	}
 	
@@ -133,7 +137,8 @@ public class Patches {
 			if (id < 0) {
 				return;
 			}
-			// SessionTools.SendLocation(id); need to check whether they actually buy the item
+			shopItemData._ItemData = LocationFinder.ItemBeingFound(id, false);
+			/*
 			if (SessionTools.LocationScouts != null) {
 				if (!SessionTools.LocationScouts.ContainsKey(id)) {
 					return;
@@ -155,6 +160,7 @@ public class Patches {
 			} else {
 				shopItemData._ItemData = ItemGiver.APItemData;
 			}
+			*/
 			// I don't think there's a way to make it give 0 of the item like with InteractionPickItem
 		}
 	}
@@ -300,13 +306,14 @@ public class Patches {
 			" enable: " + enable.ToString());
 	}
 	*/
-	
-	/*
+}
+
+//[HarmonyPatch]
+public class Loggers {
 	[HarmonyPatch(typeof(DialogueLua), nameof(DialogueLua.SetVariable))]
 	[HarmonyPostfix]
 	static void LogSetVariable(string variable) {
 		Melon<Randomizer>.Logger.Msg("Variable " + variable + " is " +
 			DialogueLua.GetVariable(variable).AsString);
-	}
-	*/
+	} //SetVariable isn't always used when a variable is set
 }

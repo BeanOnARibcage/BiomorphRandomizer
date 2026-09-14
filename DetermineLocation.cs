@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Il2CppLDS.MindBreaker.Core;
 using Il2CppPixelCrushers.DialogueSystem;
+using Il2CppLDS.MindBreaker.Data;
 
 namespace BiomorphRandomizer;
 
@@ -59,6 +60,29 @@ public static class LocationFinder {
 	public static bool IsLocationChecked(long id) {
 		string serializationData = reverseLocationDictionary[id];
 		return DialogueLua.GetVariable(serializationData, false);
+	}
+	
+	public static ItemData ItemBeingFound(long id, bool itemIsBeingGranted) {
+		ItemData result;
+		if (SessionTools.LocationScouts != null) {
+			Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
+			if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
+				result = ItemGiver.GetItemData(itemInfo.ItemId, itemIsBeingGranted);
+			} else {
+				result = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
+				result._NameID = itemInfo.ItemDisplayName;
+				result._DescriptionID = "An item from another world. It belongs to " +
+					itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
+			}
+		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) {
+			result = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
+		} else {
+			result = ItemGiver.APItemData;
+			if (itemIsBeingGranted) {
+				LocationFinder.UnscoutedLocations.Add(id);
+			}
+		}
+		return result;
 	}
 	
 	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17, 18, 19});

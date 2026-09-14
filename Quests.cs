@@ -38,7 +38,8 @@ public static class Quests {
 		if (id < 0) {
 			return ItemGiver.APItemData;
 		}
-		ItemData itemData;
+		ItemData itemData = LocationFinder.ItemBeingFound(id, true);
+		/*
 		if (SessionTools.LocationScouts != null) {
 			Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
 			if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
@@ -55,8 +56,12 @@ public static class Quests {
 			itemData = ItemGiver.APItemData;
 			LocationFinder.UnscoutedLocations.Add(id);
 		}
+		*/
 		return itemData;
 	}
+	
+	// BaseDialogueCS conversations:
+	// Will in Mezzo Skyway
 	
 	// BoydCS notes
 	// has properties _SerializationDataStateNCompleted where N is 0 through 5
@@ -103,4 +108,23 @@ public static class Quests {
 		}
 		return;
 	}
+	
+	// Z04SQ35CS notes
+	// Quest.SQ35_...
+	// State 1 Completed is (presumably) when you get the letter-tapper
+	// State 2 Completed is when you show it to Meed in the Skyway
+	// State 3 Completed is when you get the blueprint in Blightmoor
+	// swap to Z00SQ10CS
+	// State 4 Completed is when you build the lab
+	// State 5 Completed is when you talk to Meed in the lab
+	
+	
+	// Z00SQ20CS notes
+	// Quest.SQ20_...
+	// State 1 Completed is (presumably) when you get the blueprint
+	// State 2 Completed is when you build the restorer's shop
+	// State 3 Completed is when Marle thanks you and gives you the chip imprinter blueprint
+	// State 4 Completed is when you build the chip imprinter
+	// swap to Z00RobotCS
+	// State 5 Completed is when you talk to the chip imprinter
 }

@@ -15,6 +15,7 @@ public class Randomizer : MelonMod {
 		} else {
 			LoggerInstance.Msg("Randomizer disabled. Unpatching methods.");
 			this.HarmonyInstance.UnpatchSelf();
+			// this.HarmonyInstance.PatchAll(typeof(Loggers));
 		}
 	}
 	
