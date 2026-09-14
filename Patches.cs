@@ -126,6 +126,30 @@ public class Patches {
 		}
 	}
 	
+	[HarmonyPatch(typeof(BoydCS), nameof(BoydCS.PostSequenceInternal))]
+	[HarmonyPrefix]
+	static bool TrackingCenterRewards() {
+		if (DialogueLua.GetVariable("Quest.SQ02_State5_Completed", false)) {
+			if (DialogueLua.GetVariable("ShopBuildingData_BoydShop_03", false) &&
+				!DialogueLua.GetVariable("NPCs.Boyd_Shop3_Finished", false)) {
+				Melon<Randomizer>.Logger.Msg("tracking center 3 location being checked");
+				return true; // temporary true, until the location (id 55) is in scope
+				//return false;
+			} else if (DialogueLua.GetVariable("ShopBuildingData_BoydShop_02", false) &&
+				!DialogueLua.GetVariable("NPCs.Boyd_Shop2_Finished", false)) {
+				ItemData item = LocationFinder.ItemBeingFound(54, true);
+				DialogueLua.SetVariable("NPCs.Boyd_Shop2_Finished", true);
+				InteractionPickItem interaction = UnityEngine.Object.Instantiate(
+					ItemGiver.APPickItem, ItemGiver.APScene).Cast<InteractionPickItem>();
+				interaction._ItemData = item;
+				interaction.ExecutePickItem();
+				SessionTools.SendLocation(54);
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	[HarmonyPatch(typeof(ActionInteractionShop), nameof(ActionInteractionShop.StartExecution))]
 	[HarmonyPrefix]
 	static void Shop(ActionInteractionShop __instance) {

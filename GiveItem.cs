@@ -66,7 +66,8 @@ public static class ItemGiver {
 	
 	public static void GiveItemFromId(long id, bool local, long locationId) {
 		// Clone the saved interaction because they're not reusable
-		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem, APScene).Cast<InteractionPickItem>();
+		InteractionPickItem interaction = UnityEngine.Object.Instantiate(APPickItem,
+			APScene).Cast<InteractionPickItem>();
 		interaction._ItemQuantity = 1;
 		if (id == 418) {
 			BruisersReceived = true;
@@ -75,9 +76,11 @@ public static class ItemGiver {
 			} // Having the bruisers before entering Z03_03 from the lower left locks you behind a door
 		}
 		if (id == (long)SessionTools.SlotData["starting_weapon"]) {
+			UnityEngine.Object.Destroy(interaction);
 			return; // Starting weapon is always handled locally
 		}
 		if (local && !LocationFinder.UnscoutedLocations.Contains(locationId)) {
+			UnityEngine.Object.Destroy(interaction);
 			return; // location was scouted and handled locally
 		}
 		interaction._ItemData = GetItemData(id);
