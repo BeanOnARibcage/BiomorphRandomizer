@@ -191,19 +191,32 @@ public class Patches {
 	
 	[HarmonyPatch(typeof(ShopScreen), nameof(ShopScreen.OnShopPurchaseSuccess))]
 	[HarmonyPrefix]
-	static void SendShopLocation(ShopItemData shopItemData) {
+	static void SendShopLocation(ShopItemData shopItemData, ShopScreen __instance) {
 		long id = LocationFinder.IdFromSerializationData(shopItemData.VariableName);
 		if (id < 0) {
 			return;
 		}
+		long itemId = -1;
 		if (SessionTools.LocationScouts != null && SessionTools.LocationScouts.ContainsKey(id)) {
-			Quests.CheckForQuestItem(SessionTools.LocationScouts[id].ItemId);
+			itemId = SessionTools.LocationScouts[id].ItemId;
+			Quests.CheckForQuestItem(itemId);
 		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) {
-			Quests.CheckForQuestItem(ItemGiver.ItemsBeforeLocations[id]);
+			itemId = ItemGiver.ItemsBeforeLocations[id];
+			Quests.CheckForQuestItem(itemId);
 		}
 		SessionTools.SendLocation(id);
 		if (shopItemData._ItemData == ItemGiver.APItemData) {
 			LocationFinder.UnscoutedLocations.Add(id);
+		}
+		if (ItemGiver.ProgressiveItems.ContainsKey(itemId)) {
+			ItemGiver.ProgressiveItems[itemId]++;
+			ShopItemData otherData;
+			for (int i = 0; i < __instance.Items.Count; i++) {
+				otherData = __instance.Items[i];
+				if (otherData != shopItemData) {
+					otherData._ItemData = LocationFinder.ItemBeingFound(id, false);
+				}
+			}
 		}
 	}
 	
@@ -282,7 +295,7 @@ public class Patches {
 		}
 		ItemGiver.MakeAPInteraction();
 		LocationFinder.FillLocationDictionary();
-		// if this takes too long, it can be made async
+		ItemGiver.FillProgressiveItems();
 	}
 	
 	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]

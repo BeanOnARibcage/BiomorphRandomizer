@@ -85,7 +85,9 @@ public static class LocationFinder {
 		return result;
 	}
 	
-	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17, 18, 19});
+	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17, 18, 19,
+		20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+		46, 47, 48, 49, 50, 51, 55, 56, 57, 58, 403, 409, 412, 414, 415, 416});
 	
 	public static void FillLocationDictionary() {
 		locationDictionary = new Dictionary<string, long>();
@@ -122,9 +124,66 @@ public static class LocationFinder {
 		locationDictionary.Add("ShopItemData_Mementos_11_EarpieceRadar", 17);
 		locationDictionary.Add("ShopItemData_Blueprint_ChipImprinterShop_02", 18);
 		locationDictionary.Add("ShopItemData_LogicBlocks_AsrarShop_01", 19);
+		locationDictionary.Add("ShopItemData_Mementos_17_SapphireStainedGlass_01", 20);
+		locationDictionary.Add("ShopItemData_LogicBlocks_AsrarShop_01", 21);
+		locationDictionary.Add("ShopItemData_Items_EfficiencyModule_Asrar_01", 22);
+		locationDictionary.Add("ShopItemData_LogicBlocks_SalmShop_01", 23);
+		locationDictionary.Add("ShopItemData_Mementos_07_PositiveSolenoid_01", 24);
+		locationDictionary.Add("ShopItemData_Chips_18_FerroxSpecter_01", 25);
+		locationDictionary.Add("ShopItemData_Items_MementoSocket_SalmShop_01",26);
+		locationDictionary.Add("ShopItemData_Mementos_04_DemodulatorImplant_01", 27);
+		locationDictionary.Add("ShopItemData_Items_MementoSocket_SalmShop_02", 28);
+		locationDictionary.Add("ShopItemData_LogicBlocks_SalmShop_02", 29);
+		locationDictionary.Add("ShopItemData_Mementos_08_DoubleEdgedLocket_01", 30);
+		locationDictionary.Add("ShopItemData_Items_MementoSocket_SalmShop_03", 31);
+		locationDictionary.Add("ShopItemData_LogicBlocks_SalmShop_03", 32);
+		locationDictionary.Add("ShopItemData_Blueprint_BoydShop_03", 33);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_01", 34);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_02", 35);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_03", 36);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_04", 37);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_05", 38);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_06", 39);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_07", 40);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_08", 41);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_09", 42);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_10", 43);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_11", 44);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_12", 45);
+		locationDictionary.Add("ShopItemData_Collectible_CarmelinaShop_13", 46);
+		locationDictionary.Add("SerializationData_Quest_SQ08_RawMaterial", 47);
+		locationDictionary.Add("SerializationData_Quest_SQ08_Laurentium", 48);
+		locationDictionary.Add("SerializationData_Quest_SQ08_LogicBlocks", 49);
+		locationDictionary.Add("SerializationData_Quest_SQ08_Reward_27", 50);
+		locationDictionary.Add("SerializationData_Quest_SQ08_Reward_39", 51);
+		locationDictionary.Add("Quest.SQ20_State3_Completed", 52);
+		locationDictionary.Add("Quest.SQ35_State3_Completed", 53);
+		locationDictionary.Add("NPCs.Boyd_Shop2_Finished", 54);
+		locationDictionary.Add("NPCs.Boyd_Shop3_Finished", 55);
+		locationDictionary.Add("SerializationData_NPC_Will_Z00_01", 59);
 		
 		// Mezzo Skyway
 		locationDictionary.Add("SerializationData_Z04_Quest_Wrench_01", 401);
+		locationDictionary.Add("SerializationData_Z04_LogicBlocks_02", 402);
+		locationDictionary.Add("SerializationData_Z04_Chest_03", 403);
+		locationDictionary.Add("Items.Scargatos.11", 404);
+		locationDictionary.Add("SerializationData_NPC_Will_Z04_06", 405);
+		locationDictionary.Add("SerializationData_Blueprint_MarleShop_01", 406);
+		locationDictionary.Add("SerializationData_Z04_Memento_18", 407);
+		locationDictionary.Add("SerializationData_Z04_LogicBlocks_03", 408);
+		locationDictionary.Add("SerializationData_Z04_Laurentium_01", 409);
+		locationDictionary.Add("SerializationData_Quest_SQ35_LetterTapper_01", 410);
+		locationDictionary.Add("SerializationData_Z04_RawMaterial_01", 411);
+		locationDictionary.Add("SerializationData_Z04_Section_1", 412);
+		locationDictionary.Add("SerializationData_Z04_Boss_MementoSocket_01", 413);
+		locationDictionary.Add("SerializationData_Z04_RawMaterial_04", 414);
+		locationDictionary.Add("Items.Scargatos.12", 415);
+		locationDictionary.Add("SerializationData_Z04_Chest_02", 416);
+		locationDictionary.Add("SerializationData_Z04_LogicBlocks_01", 417);
+		locationDictionary.Add("SerializationData_Z04_RawMaterial_03", 418);
+		
+		// Biomorphs
+		// Still need to figure out how these work
 		
 		foreach (KeyValuePair<string, long> pair in locationDictionary) {
 			reverseLocationDictionary.Add(pair.Value, pair.Key);

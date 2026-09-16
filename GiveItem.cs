@@ -115,6 +115,24 @@ public static class ItemGiver {
 		APItemData._DescriptionID = "A randomized item from Archipelago.";
 	}
 	
+	public static Dictionary<long, int> ProgressiveItems;
+	public static Dictionary<long, bool> ProgressiveThreeCopies; // true for items with three copies, false for 2
+	
+	public static void FillProgressiveItems() {
+		ProgressiveItems = new Dictionary<long, int>();
+		ProgressiveThreeCopies = new Dictionary<long, bool>();
+		// addProgressiveEntry(205, false);
+		addProgressiveEntry(212, false); // true eventually
+		addProgressiveEntry(300, false); // 3 eventually
+		// addProgressiveEntry(304, false);
+		// addProgressiveEntry(316, false);
+	}
+	
+	private static void addProgressiveEntry(long id, bool threeCopies) {
+		ProgressiveItems.Add(id, 0);
+		ProgressiveThreeCopies.Add(id, threeCopies);
+	}
+	
 	public static ItemData GetItemData(long id) {
 		return GetItemData(id, true);
 	}
@@ -126,9 +144,23 @@ public static class ItemGiver {
 		int ones, hundreds;
 		ItemDatabase items = InventoryHandler.ItemDatabase;
 		hundreds = Math.DivRem((int)id, 100, out ones);
+		if (hundreds != 2) {
+			if (ProgressiveItems.ContainsKey(id)) {
+				if (ProgressiveThreeCopies[id]) {
+					ones += Math.Clamp(ProgressiveItems[id], 0, 2);
+				} else {
+					ones += Math.Clamp(ProgressiveItems[id], 0, 1);
+				}
+				if (itemIsBeingGranted) {
+					ProgressiveItems[id]++;
+				}
+			}
+		}
 		switch (hundreds) {
 			case 1: // Abilities
 				return items.Abilities[ones];
+			case 2: // Biomorphs
+				return null; // need to figure out how these work
 			case 3: // Blueprints
 				return items.Blueprints[ones].Cast<ItemData>();
 			case 4: // Chips
