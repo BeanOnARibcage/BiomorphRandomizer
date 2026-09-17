@@ -161,7 +161,11 @@ public static class ItemGiver {
 			case 1: // Abilities
 				return items.Abilities[ones];
 			case 2: // Biomorphs
-				return Biomorphs.BiomorphRewards[ones].ItemData;
+				BiomorphRewardData reward = Biomorphs.BiomorphRewards[ones];
+				if (itemIsBeingGranted) {
+					Biomorphs.Apply(reward);
+				}
+				return reward.ItemData;
 			case 3: // Blueprints
 				return items.Blueprints[ones].Cast<ItemData>();
 			case 4: // Chips
@@ -170,6 +174,8 @@ public static class ItemGiver {
 				return items.Mementos[ones];
 			case 6: // Scargatos
 				return items.Scargatos[ones];
+			case 7: // Will Discs
+				return items.WillDiscs[ones].Cast<ItemData>();
 			case 8: // Other key items
 				return items.KeyItems[ones];
 			case 0: // Other

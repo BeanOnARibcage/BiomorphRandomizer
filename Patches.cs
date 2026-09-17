@@ -80,9 +80,16 @@ public class Patches {
 			return;
 		} else {
 			long startingWeaponId = (long)SessionTools.SlotData["starting_weapon"];
-			WeaponData startingWeapon = ItemGiver.GetItemData(startingWeaponId, false).Cast<WeaponData>();
-			ItemData bruisers = ItemGiver.GetItemData(418, false);
-			//InventoryHandler.UpdateItem(bruisers, 0);
+			WeaponData startingWeapon;
+			if (startingWeaponId / 100 == 4) { // starting weapon is a chip
+				startingWeapon = ItemGiver.GetItemData(startingWeaponId, false).Cast<WeaponData>();
+			} else if (startingWeaponId / 100 == 2) { // starting weapon is a biomorph
+				startingWeapon = null;
+			} else {
+				Melon<Randomizer>.Logger.Msg("Invalid id for starting weapon: " +
+					startingWeaponId.ToString());
+				startingWeapon = null;
+			}
 			
 			InventoryHandler.EquippedChip0 = startingWeapon;
 			InventoryHandler.BaseHeroAttacks[0] = startingWeapon;
