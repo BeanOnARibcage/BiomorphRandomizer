@@ -94,8 +94,8 @@ public static class Biomorphs {
 	private static void shuffleFreeBiomorph(string monsterName, string dataInRoom, string alternateData) {
 		if (currentFreeBiomorphs[monsterName] == dataInRoom &&
 			!DialogueLua.GetVariable("Archipelago_" + monsterName + "_Any", false)) {
-			DialogueLua.SetVariable(dataInRoom, false);
-			DialogueLua.SetVariable(alternateData, true);
+			DialogueLua.SetVariable(dataInRoom, 0);
+			DialogueLua.SetVariable(alternateData, 2);
 			currentFreeBiomorphs[monsterName] = alternateData;
 		}
 	}
@@ -112,25 +112,21 @@ public static class Biomorphs {
 	
 	private static void createFreeBiomorph(string monsterName, string monsterSerializationData) {
 		if (!DialogueLua.GetVariable("Archipelago_" + monsterName + "_Any", false)) {
-			DialogueLua.SetVariable(monsterSerializationData, true);
+			DialogueLua.SetVariable(monsterSerializationData, 2);
 			currentFreeBiomorphs[monsterName] = monsterSerializationData;
 		} else {
 			currentFreeBiomorphs[monsterName] = "";
 		}
 	}
 	
-	public static void RecordBiomorph(long id) {
-		string monsterName = LocationFinder.MonsterName(id);
-		if (monsterName != null) {
-			string variable = "Archipelago_" + monsterName + "_Any";
-			if (!DialogueLua.GetVariable(variable, false)) {
-				DialogueLua.SetVariable(variable, true);
-				DialogueLua.SetVariable(currentFreeBiomorphs[monsterName], false);
-				currentFreeBiomorphs[monsterName] = "";
+	public static void RecordBiomorph(string monsterName, string monsterSerializationData) {
+		string variable = "Archipelago_" + monsterName + "_Any";
+		if (!DialogueLua.GetVariable(variable, false)) {
+			DialogueLua.SetVariable(variable, true);
+			if (currentFreeBiomorphs[monsterName] != monsterSerializationData) {
+				DialogueLua.SetVariable(currentFreeBiomorphs[monsterName], 0);
 			}
-		} else {
-			MelonLoader.Melon<Randomizer>.Logger.Msg(
-				"Attempted to record biomorph with invalid id " + id.ToString());
+			currentFreeBiomorphs[monsterName] = "";
 		}
 	}
 	

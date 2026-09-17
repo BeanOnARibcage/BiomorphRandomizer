@@ -327,6 +327,13 @@ public class Patches {
 		Biomorphs.ShuffleFreeBiomorphs(zone);
 	}
 	
+	[HarmonyPatch(typeof(MindBreakArea), nameof(MindBreakArea.OnMindBreak))]
+	[HarmonyPostfix]
+	static void RecordBiomorph(MonsterData monsterData, SerializationData serializationDataMindBreak) {
+		Biomorphs.RecordBiomorph(monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1),
+			serializationDataMindBreak.VariableName);
+	}
+	
 	private static bool PrefixForApply(BiomorphRewardData instance) {
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
@@ -341,7 +348,6 @@ public class Patches {
 			interaction.ExecutePickItem();
 			SessionTools.SendLocation(locationId);
 			LocationFinder.RecordLocationSerializationData(locationId);
-			Biomorphs.RecordBiomorph(locationId);
 			return false;
 		} else {
 			return true; // Unrandomized reward
