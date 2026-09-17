@@ -44,7 +44,9 @@ public static class LocationFinder {
 	}
 	
 	public static void CheckForGoal() {
-		if (DialogueLua.GetVariable("Quest.MQ02_State0_Completed", false) && SessionTools.CheckConnection()) {
+		bool goalCondition = DialogueLua.GetVariable("SerializationData_Z01_Map_01", 0) > 0 ||
+			DialogueLua.GetVariable("SerializationData_Z01_Map_01", 0) > 0;
+		if (goalCondition && SessionTools.CheckConnection()) {
 			SessionTools.SendGoal();
 		}
 	}
@@ -62,6 +64,10 @@ public static class LocationFinder {
 		return DialogueLua.GetVariable(serializationData, false);
 	}
 	
+	public static bool IsLocationIncluded(long id) {
+		return !excludedLocations.Contains(id);
+	}
+	
 	public static ItemData ItemBeingFound(long id, bool itemIsBeingGranted) {
 		ItemData result;
 		if (SessionTools.LocationScouts != null) {
@@ -75,7 +81,7 @@ public static class LocationFinder {
 					itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
 			}
 		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) {
-			result = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
+			result = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id], itemIsBeingGranted);
 		} else {
 			result = ItemGiver.APItemData;
 			if (itemIsBeingGranted) {
@@ -85,9 +91,23 @@ public static class LocationFinder {
 		return result;
 	}
 	
+	public static void RecordLocationSerializationData(long id) {
+		DialogueLua.SetVariable(reverseLocationDictionary[id], true);
+	}
+	
+	public static string MonsterName(long id) {
+		if (id >= 2000) {
+			if (id <= 2002)
+				return "Fubirang";
+			else if (id <= 2005)
+				return "Scarbyttle";
+		}
+		return null;
+	}
+	
 	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-		46, 47, 48, 49, 50, 51, 55, 56, 57, 58, 403, 409, 412, 414, 415, 416});
+		46, 47, 48, 49, 50, 51, 55, 56, 57, 58, 403, 409, 412, 414, 415, 416, 2001, 2002, 2005});
 	
 	public static void FillLocationDictionary() {
 		locationDictionary = new Dictionary<string, long>();
@@ -183,7 +203,12 @@ public static class LocationFinder {
 		locationDictionary.Add("SerializationData_Z04_RawMaterial_03", 418);
 		
 		// Biomorphs
-		// Still need to figure out how these work
+		locationDictionary.Add("Archipelago_Fubirang_01", 2000);
+		locationDictionary.Add("Archipelago_Fubirang_02", 2001);
+		locationDictionary.Add("Archipelago_Fubirang_03", 2002);
+		locationDictionary.Add("Archipelago_Scarbyttle_01", 2003);
+		locationDictionary.Add("Archipelago_Scarbyttle_02", 2004);
+		locationDictionary.Add("Archipelago_Scarbyttle_03", 2005);
 		
 		foreach (KeyValuePair<string, long> pair in locationDictionary) {
 			reverseLocationDictionary.Add(pair.Value, pair.Key);

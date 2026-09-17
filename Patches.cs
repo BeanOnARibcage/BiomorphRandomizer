@@ -37,7 +37,7 @@ public class Patches {
 				return false;
 			}
 			long itemId = (long)SessionTools.SlotData["starting_weapon"];
-			interaction._ItemData = ItemGiver.GetItemData(itemId);
+			interaction._ItemData = ItemGiver.GetItemData(itemId, true);
 			if (itemId == 418) {
 				ItemGiver.BruisersReceived = true;
 			}
@@ -230,9 +230,6 @@ public class Patches {
 	static void ReadArchipelagoData() {
 		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
 		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
-		if (SessionTools.CheckConnection()) {
-			LocationFinder.CheckForLocations();
-		}
 		if (DialogueLua.DoesVariableExist("Archipelago_UnscoutedLocations") &&
 			DialogueLua.GetVariable("Archipelago_UnscoutedLocations").isTable) {
 			LocationFinder.UnscoutedLocations = TableHandler.TableToList(
@@ -243,10 +240,14 @@ public class Patches {
 			ItemGiver.ItemsBeforeLocations = TableHandler.TableToDict(
 				DialogueLua.GetVariable("Archipelago_ItemsBeforeLocations").asTable.luaTable);
 		}
+		Biomorphs.CreateFreeBiomorphs();
 		if (!SessionTools.CheckConnection()) {
 			SessionTools.Connect();
 		}
 		SessionTools.FirstConnectionAttempt = true;
+		if (SessionTools.CheckConnection()) {
+			LocationFinder.CheckForLocations();
+		}
 	}
 	
 	[HarmonyPatch(typeof(ActionCinematic), nameof(ActionCinematic.StartExecution))]
@@ -294,14 +295,68 @@ public class Patches {
 			return;
 		}
 		ItemGiver.MakeAPInteraction();
+		BiomorphRewardHolder rewards = ItemGiver.APPickItemGO.AddComponent<BiomorphRewardHolder>();
+		Biomorphs.SetAndFillBiomorphRewards(rewards);
 		LocationFinder.FillLocationDictionary();
 		ItemGiver.FillProgressiveItems();
 	}
 	
 	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
 	[HarmonyPrefix]
-	static void SetQuestVariables(string zone) {
+	static void SetVariables(string zone) {
 		Quests.SetQuestVariables(zone);
+		Biomorphs.ShuffleFreeBiomorphs(zone);
+	}
+	
+	private static bool PrefixForApply(BiomorphRewardData instance) {
+		long locationId;
+		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
+			instance._RewardID = instance._RewardID.Substring(3);
+			return true;
+		} else if (instance.ItemData != null && long.TryParse(instance.ItemData._NameID, out locationId)) {
+			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
+			InteractionPickItem interaction = UnityEngine.Object.Instantiate(ItemGiver.APPickItem,
+				ItemGiver.APScene).Cast<InteractionPickItem>();
+			interaction._ItemQuantity = 1;
+			interaction._ItemData = item;
+			interaction.ExecutePickItem();
+			SessionTools.SendLocation(locationId);
+			LocationFinder.RecordLocationSerializationData(locationId);
+			Biomorphs.RecordBiomorph(locationId);
+			return false;
+		} else {
+			return true; // Unrandomized reward
+		}
+	}
+	
+	[HarmonyPatch(typeof(BiomorphRewardDataArsenal), nameof(BiomorphRewardDataArsenal.Apply))]
+	[HarmonyPrefix]
+	static bool Arsenal(BiomorphRewardDataArsenal __instance) {
+		return PrefixForApply(__instance);
+	}
+	
+	[HarmonyPatch(typeof(BiomorphRewardDataAttack), nameof(BiomorphRewardDataAttack.Apply))]
+	[HarmonyPrefix]
+	static bool Attack(BiomorphRewardDataAttack __instance) {
+		return PrefixForApply(__instance);
+	}
+	
+	[HarmonyPatch(typeof(BiomorphRewardDataCharge), nameof(BiomorphRewardDataCharge.Apply))]
+	[HarmonyPrefix]
+	static bool Charge(BiomorphRewardDataCharge __instance) {
+		return PrefixForApply(__instance);
+	}
+	
+	[HarmonyPatch(typeof(BiomorphRewardDataChip), nameof(BiomorphRewardDataChip.Apply))]
+	[HarmonyPrefix]
+	static bool Chip(BiomorphRewardDataChip __instance) {
+		return PrefixForApply(__instance);
+	}
+	
+	[HarmonyPatch(typeof(BiomorphRewardDataDefense), nameof(BiomorphRewardDataDefense.Apply))]
+	[HarmonyPrefix]
+	static bool Defense(BiomorphRewardDataDefense __instance) {
+		return PrefixForApply(__instance);
 	}
 	
 	/*
@@ -345,12 +400,18 @@ public class Patches {
 	*/
 }
 
-//[HarmonyPatch]
+// [HarmonyPatch]
 public class Loggers {
-	[HarmonyPatch(typeof(DialogueLua), nameof(DialogueLua.SetVariable))]
+	// [HarmonyPatch(typeof(DialogueLua), nameof(DialogueLua.SetVariable))]
+	// [HarmonyPostfix]
+	// static void LogSetVariable(string variable) {
+	// 	Melon<Randomizer>.Logger.Msg("Variable " + variable + " is " +
+	// 		DialogueLua.GetVariable(variable).AsString);
+	// } //SetVariable isn't always used when a variable is set
+	
+	[HarmonyPatch(typeof(BiomorphRewardDataArsenal), nameof(BiomorphRewardDataArsenal.Apply))]
 	[HarmonyPostfix]
-	static void LogSetVariable(string variable) {
-		Melon<Randomizer>.Logger.Msg("Variable " + variable + " is " +
-			DialogueLua.GetVariable(variable).AsString);
-	} //SetVariable isn't always used when a variable is set
+	static void LogApply() {
+		Melon<Randomizer>.Logger.Msg("Apply was called");
+	}
 }

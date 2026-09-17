@@ -21,7 +21,6 @@ public class Randomizer : MelonMod {
 	
 	public override void OnUpdate() {
 		if (!Preferences.Enable.Value) return;
-		//ItemGiver.GetInteractions();
 		if (SessionTools.LocationScouts == null && SessionTools.ScoutTask != null) {
 			SessionTools.ReceiveLocationScouts();
 		}

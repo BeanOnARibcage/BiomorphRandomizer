@@ -49,6 +49,7 @@ public static class SessionTools {
 		}
 		else {
 			Melon<Randomizer>.Logger.Msg("Connection unsuccessful");
+			Biomorphs.SetUpBiomorphLocations();
 		}
 		return;
 	}
@@ -57,6 +58,7 @@ public static class SessionTools {
 		if (ScoutTask.IsCompleted) {
 			if (ScoutTask.IsCompletedSuccessfully) {
 				LocationScouts = ScoutTask.Result;
+				Biomorphs.SetUpBiomorphLocations();
 			} else {
 				Melon<Randomizer>.Logger.Msg("Scouts not received successfully");
 				Melon<Randomizer>.Logger.Msg("Status: " + ScoutTask.Status.ToString());
@@ -95,15 +97,21 @@ public static class SessionTools {
 	}
 	
 	public static void SendLocation(long id) {
-		Session.Locations.CompleteLocationChecks(id);
+		if (CheckConnection()) {
+			Session.Locations.CompleteLocationChecks(id);
+		}
 	}
 	
 	public static void SendMultipleLocations(List<long> ids) {
-		Session.Locations.CompleteLocationChecks(ids.ToArray());
+		if (CheckConnection()) {
+			Session.Locations.CompleteLocationChecks(ids.ToArray());
+		}
 	}
 	
 	public static void SendGoal() {
-		Session.SetGoalAchieved();
+		if (CheckConnection()) {
+			Session.SetGoalAchieved();
+		}
 	}
 	
 	// returns true if we should immediately check for the next item (i.e. if money was dequeued)

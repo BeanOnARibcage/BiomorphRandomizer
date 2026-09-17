@@ -83,7 +83,7 @@ public static class ItemGiver {
 			UnityEngine.Object.Destroy(interaction);
 			return; // location was scouted and handled locally
 		}
-		interaction._ItemData = GetItemData(id);
+		interaction._ItemData = GetItemData(id, true);
 		interaction.ExecutePickItem();
 	}
 	
@@ -121,8 +121,8 @@ public static class ItemGiver {
 	public static void FillProgressiveItems() {
 		ProgressiveItems = new Dictionary<long, int>();
 		ProgressiveThreeCopies = new Dictionary<long, bool>();
-		// addProgressiveEntry(205, false);
-		addProgressiveEntry(212, false); // true eventually
+		// addProgressiveEntry(215, false); // 3 eventually
+		addProgressiveEntry(236, false); // 3 eventually
 		addProgressiveEntry(300, false); // 3 eventually
 		// addProgressiveEntry(304, false);
 		// addProgressiveEntry(316, false);
@@ -133,34 +133,35 @@ public static class ItemGiver {
 		ProgressiveThreeCopies.Add(id, threeCopies);
 	}
 	
-	public static ItemData GetItemData(long id) {
-		return GetItemData(id, true);
-	}
+	// public static ItemData GetItemData(long id) {
+	// 	return GetItemData(id, true);
+	// }
 	
 	public static ItemData GetItemData(long id, bool itemIsBeingGranted) {
 		if (itemIsBeingGranted) {
 			Quests.CheckForQuestItem(id);
+			if (id == 418) {
+				BruisersReceived = true;
+			}
 		}
 		int ones, hundreds;
 		ItemDatabase items = InventoryHandler.ItemDatabase;
 		hundreds = Math.DivRem((int)id, 100, out ones);
-		if (hundreds != 2) {
-			if (ProgressiveItems.ContainsKey(id)) {
-				if (ProgressiveThreeCopies[id]) {
-					ones += Math.Clamp(ProgressiveItems[id], 0, 2);
-				} else {
-					ones += Math.Clamp(ProgressiveItems[id], 0, 1);
-				}
-				if (itemIsBeingGranted) {
-					ProgressiveItems[id]++;
-				}
+		if (ProgressiveItems.ContainsKey(id)) {
+			if (ProgressiveThreeCopies[id]) {
+				ones += Math.Clamp(ProgressiveItems[id], 0, 2);
+			} else {
+				ones += Math.Clamp(ProgressiveItems[id], 0, 1);
+			}
+			if (itemIsBeingGranted) {
+				ProgressiveItems[id]++;
 			}
 		}
 		switch (hundreds) {
 			case 1: // Abilities
 				return items.Abilities[ones];
 			case 2: // Biomorphs
-				return null; // need to figure out how these work
+				return Biomorphs.BiomorphRewards[ones].ItemData;
 			case 3: // Blueprints
 				return items.Blueprints[ones].Cast<ItemData>();
 			case 4: // Chips
@@ -181,6 +182,22 @@ public static class ItemGiver {
 			default:
 				return null;
 		}
+	}
+	
+	public static BiomorphRewardData GetBiomorphRewardData(long id) {
+		int ones, hundreds;
+		hundreds = Math.DivRem((int)id, 100, out ones);
+		if (hundreds != 2) {
+			return null;
+		}
+		if (ProgressiveItems.ContainsKey(id)) {
+			if (ProgressiveThreeCopies[id]) {
+				ones += Math.Clamp(ProgressiveItems[id], 0, 2);
+			} else {
+				ones += Math.Clamp(ProgressiveItems[id], 0, 1);
+			}
+		}
+		return Biomorphs.BiomorphRewards[ones];
 	}
 }
 
