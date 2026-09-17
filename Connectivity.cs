@@ -100,12 +100,7 @@ public static class SessionTools {
 		if (CheckConnection()) {
 			Session.Locations.CompleteLocationChecks(id);
 		}
-	}
-	
-	public static void SendMultipleLocations(List<long> ids) {
-		if (CheckConnection()) {
-			Session.Locations.CompleteLocationChecks(ids.ToArray());
-		}
+		Quests.CheckForQuestLocation(id);
 	}
 	
 	public static void SendGoal() {

@@ -9,18 +9,38 @@ public static class Quests {
 	public static void SetQuestVariables(string map) {
 		switch (map) {
 			case "Z00_02":
-				// Boyd's quest
+				// Boyd
 				DialogueLua.SetVariable("Quest.SQ02_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ02_State1_Item", false));
+				// Marle Kertar
+				DialogueLua.SetVariable("Quest.SQ20_State1_Completed",
 					DialogueLua.GetVariable("Archipelago_SQ02_State1_Item", false));
 				goto case "Z03_06";
 			case "Z04_01":
+				// Boyd
 				DialogueLua.SetVariable("Quest.SQ02_State1_Completed",
 					DialogueLua.GetVariable("Archipelago_SQ02_State1_Location", false));
 				return;
 			case "Z03_06":
+				// Boyd
 				DialogueLua.SetVariable("Global.SAFEUpgradeUnlocked",
 					DialogueLua.GetVariable("Quest.SQ02_State4_Completed", false) &&
 					DialogueLua.GetVariable("Global.SAFEKits", 0) > 0);
+				return;
+			case "Z04_06":
+				// Marle Kertar
+				DialogueLua.SetVariable("Quest.SQ20_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ02_State1_Location", false));
+				return;
+			case "Z04_10":
+				// Meed
+				DialogueLua.SetVariable("Quest.SQ35_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ35_State1_Location", false));
+				return;
+			case "Z04_14":
+				// Meed
+				DialogueLua.SetVariable("Quest.SQ35_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ35_State1_Item", false));
 				return;
 		}
 	}
@@ -29,6 +49,26 @@ public static class Quests {
 		switch (id) {
 			case 820:
 				DialogueLua.SetVariable("Archipelago_SQ02_State1_Item", true);
+				return;
+			case 316:
+				DialogueLua.SetVariable("Archipelago_SQ20_State1_Item", true);
+				return;
+			case 1:
+				DialogueLua.SetVariable("Archipelago_SQ35_State1_Item", true);
+				return;
+		}
+	}
+	
+	public static void CheckForQuestLocation(long id) {
+		switch (id) {
+			case 401:
+				DialogueLua.SetVariable("Archipelago_SQ02_State1_Location", true);
+				return;
+			case 406:
+				DialogueLua.SetVariable("Archipelago_SQ20_State1_Location", true);
+				return;
+			case 410:
+				DialogueLua.SetVariable("Archipelago_SQ35_State1_Location", true);
 				return;
 		}
 	}
@@ -39,29 +79,21 @@ public static class Quests {
 			return ItemGiver.APItemData;
 		}
 		ItemData itemData = LocationFinder.ItemBeingFound(id, true);
-		/*
-		if (SessionTools.LocationScouts != null) {
-			Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
-			if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
-				itemData = ItemGiver.GetItemData(itemInfo.ItemId);
-			} else {
-				itemData = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
-				itemData._NameID = itemInfo.ItemDisplayName;
-				itemData._DescriptionID = "An item from another world. It belongs to " +
-					itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
-			}
-		} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) { // these will always be local
-			itemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id]);
-		} else {
-			itemData = ItemGiver.APItemData;
-			LocationFinder.UnscoutedLocations.Add(id);
-		}
-		*/
 		return itemData;
 	}
 	
-	// BaseDialogueCS conversations:
+	// BaseDialogueCS notes:
+	// use _ItemToGiveOnEnd and _SerializationDataItemToGiveOnEnd
+	// Conversations:
 	// Will in Mezzo Skyway
+	// Will in Blightmoor
+	
+	public static void HandleCinematic(BaseDialogueCS cinematic) {
+		string locationData = cinematic._SerializationDataItemToGiveOnEnd.VariableName;
+		long id = LocationFinder.IdFromSerializationData(locationData);
+		cinematic._ItemToGiveOnEnd = chooseItemData(id);
+		SessionTools.SendLocation(id);
+	}
 	
 	// BoydCS notes
 	// has properties _SerializationDataStateNCompleted where N is 0 through 5
@@ -118,6 +150,14 @@ public static class Quests {
 	// State 4 Completed is when you build the lab
 	// State 5 Completed is when you talk to Meed in the lab
 	
+	public static void HandleCinematic(Z04SQ35CS cinematic) {
+		if (DialogueLua.GetVariable("Quest.SQ35_State2_Completed", false) &&
+			!DialogueLua.GetVariable("Quest.SQ35_State3_Completed", false)) {
+			long id = LocationFinder.IdFromSerializationData("Quest.SQ35_State3_Completed");
+			cinematic._BlueprintLab = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
+	}
 	
 	// Z00SQ20CS notes
 	// Quest.SQ20_...
@@ -127,4 +167,13 @@ public static class Quests {
 	// State 4 Completed is when you build the chip imprinter
 	// swap to Z00RobotCS
 	// State 5 Completed is when you talk to the chip imprinter
+	
+	public static void HandleCinematic(Z00SQ20CS cinematic) {
+		if (DialogueLua.GetVariable("Quest.SQ20_State2_Completed", false) &&
+			!DialogueLua.GetVariable("Quest.SQ20_State3_Completed", false)) {
+			long id = LocationFinder.IdFromSerializationData("Quest.SQ20_State3_Completed");
+			cinematic._BlueprintChip = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
+	}
 }

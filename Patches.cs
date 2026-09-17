@@ -255,12 +255,24 @@ public class Patches {
 	static void DetermineWhichDialogue(ActionCinematic __instance) {
 		CinematicSequence cinematic = __instance.Interaction.CinematicSequence;
 		Il2CppSystem.Type cinematicType = Il2CppType.TypeFromPointer(cinematic.ObjectClass);
+		if (cinematicType == Il2CppType.Of<BaseDialogueCS>()) {
+			Quests.HandleCinematic(cinematic.Cast<BaseDialogueCS>());
+			return;
+		}
 		if (cinematicType == Il2CppType.Of<BoydCS>()) {
 			Quests.HandleCinematic(cinematic.Cast<BoydCS>());
 			return;
 		}
 		if (cinematicType == Il2CppType.Of<Z00SQ02CS>()) {
 			Quests.HandleCinematic(cinematic.Cast<Z00SQ02CS>());
+			return;
+		}
+		if (cinematicType == Il2CppType.Of<Z00SQ20CS>()) {
+			Quests.HandleCinematic(cinematic.Cast<Z00SQ20CS>());
+			return;
+		}
+		if (cinematicType == Il2CppType.Of<Z04SQ35CS>()) {
+			Quests.HandleCinematic(cinematic.Cast<Z04SQ35CS>());
 			return;
 		}
 		return;
