@@ -46,5 +46,27 @@ public static class TableHandler {
 			dict.Add(long.Parse(key), val);
 		}
 		return dict;
-	}	
+	}
+	
+	public static LuaTable DictToTable(Dictionary<long, int> dict) {
+		LuaTable table = new LuaTable();
+		foreach (KeyValuePair<long, int> pair in dict) {
+			table.AddRaw(pair.Key.ToString(), new LuaNumber(pair.Value));
+		}
+		return table;
+	}
+	
+	public static Dictionary<long, int> TableToDictInt(LuaTable table) {
+		Dictionary<long, int> dict = new Dictionary<long, int>();
+		// Data that goes in as one table comes out nested in another table
+		LuaTable table2 = table.GetValue(1).Cast<LuaTable>();
+		
+		Il2CppSystem.Collections.Generic.Dictionary<LuaValue, LuaValue> tableDict = table2.Dict;
+		foreach (Il2CppSystem.Collections.Generic.KeyValuePair<LuaValue, LuaValue> pair in tableDict) {
+			string key = pair.Key.Cast<LuaString>().Text;
+			int val = (int)pair.Value.Cast<LuaNumber>().Number;
+			dict.Add(long.Parse(key), val);
+		}
+		return dict;
+	}
 }

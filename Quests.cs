@@ -6,6 +6,11 @@ namespace BiomorphRandomizer;
 
 public static class Quests {
 	
+	// Quest variables I'm messing with:
+	// Quest.SQ02_State1_Completed
+	// Quest.SQ20_State1_Completed
+	// Global.SAFEUpgradeUnlocked
+	// Quest.SQ35_State1_Completed
 	public static void SetQuestVariables(string map) {
 		switch (map) {
 			case "Z00_02":
@@ -112,7 +117,7 @@ public static class Quests {
 			long id = -1;
 			string completed2 = cinematic._SerializationDataState2Completed.VariableName;
 			if (!DialogueLua.GetVariable(completed2, false)) {
-				DialogueLua.SetVariable("Archipelago_SQ02_State2_Location", true);
+				// DialogueLua.SetVariable("Archipelago_SQ02_State2_Location", true);
 				id = LocationFinder.IdFromSerializationData(completed2);
 				cinematic._BlueprintBoyd = chooseItemData(id);
 			} else if (DialogueLua.GetVariable(cinematic._SerializationDataState3Completed.VariableName, false)) {

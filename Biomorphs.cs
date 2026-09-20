@@ -6,6 +6,7 @@ using Il2CppLDS.MindBreaker.Data;
 using Il2CppLDS.MindBreaker.Core;
 using Il2CppLDS.Framework.Actors;
 using Il2CppInterop.Runtime;
+using MelonLoader;
 
 namespace BiomorphRandomizer;
 
@@ -20,6 +21,8 @@ public static class Biomorphs {
 			return; // This should only be executed before the data in the database has been modified
 		}
 		BiomorphRewards = newHolder;
+		BiomorphRewards.BiomorphRewards = 
+			new Il2CppSystem.Collections.Generic.List<BiomorphRewardData>();
 		BiomorphRewardData reward, firstReward;
 		ItemData itemData;
 		
@@ -62,6 +65,7 @@ public static class Biomorphs {
 		for (int i = 0; i < 3; i++) {
 			if (LocationFinder.IsLocationIncluded(firstId + i)) {
 				ItemData item = LocationFinder.ItemBeingFound(firstId + i, false);
+				item = UnityEngine.Object.Instantiate(item).Cast<ItemData>();
 				item._NameID = (firstId + i).ToString();
 				monster.BiomorphRewards[i]._BiomorphReward._ItemData = item;
 			}
@@ -120,6 +124,9 @@ public static class Biomorphs {
 	}
 	
 	public static void RecordBiomorph(string monsterName, string monsterSerializationData) {
+		if (!currentFreeBiomorphs.ContainsKey(monsterName)) {
+			return; // monster is not in scope of the randomizer yet
+		}
 		string variable = "Archipelago_" + monsterName + "_Any";
 		if (!DialogueLua.GetVariable(variable, false)) {
 			DialogueLua.SetVariable(variable, true);
@@ -138,7 +145,15 @@ public static class Biomorphs {
 
 [MelonLoader.RegisterTypeInIl2Cpp]
 public class BiomorphRewardHolder : MonoBehaviour {
-	public Il2CppSystem.Collections.Generic.List<BiomorphRewardData> BiomorphRewards;
+	public Il2CppReferenceField<Il2CppSystem.Collections.Generic.List<BiomorphRewardData>>
+		BiomorphRewardsIl2Cpp;
+	public Il2CppSystem.Collections.Generic.List<BiomorphRewardData> BiomorphRewards {
+		get {
+			return BiomorphRewardsIl2Cpp.Value;
+		} set {
+			BiomorphRewardsIl2Cpp.Value = value;
+		}
+	}
 	public BiomorphRewardData this[int index] {
 		get { return BiomorphRewards[index]; }
 		set { BiomorphRewards[index] = value; }

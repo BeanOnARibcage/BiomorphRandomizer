@@ -117,9 +117,16 @@ public static class ItemGiver {
 	
 	public static Dictionary<long, int> ProgressiveItems;
 	public static Dictionary<long, bool> ProgressiveThreeCopies; // true for items with three copies, false for 2
+	private static bool newData;
 	
-	public static void FillProgressiveItems() {
-		ProgressiveItems = new Dictionary<long, int>();
+	public static void FillProgressiveItems(Dictionary<long, int> loadedProgressiveItems) {
+		if (loadedProgressiveItems != null) {
+			newData = false;
+			ProgressiveItems = loadedProgressiveItems;
+		} else {
+			newData = true;
+			ProgressiveItems = new Dictionary<long, int>();
+		}
 		ProgressiveThreeCopies = new Dictionary<long, bool>();
 		// addProgressiveEntry(215, false); // 3 eventually
 		addProgressiveEntry(236, false); // 3 eventually
@@ -129,7 +136,9 @@ public static class ItemGiver {
 	}
 	
 	private static void addProgressiveEntry(long id, bool threeCopies) {
-		ProgressiveItems.Add(id, 0);
+		if (newData) {
+			ProgressiveItems.Add(id, 0);
+		}
 		ProgressiveThreeCopies.Add(id, threeCopies);
 	}
 	

@@ -20,6 +20,10 @@ namespace BiomorphRandomizer;
 
 [HarmonyPatch]
 public class Patches {
+	private static void log(string message) {
+		Melon<Randomizer>.Logger.Msg(message);
+	}
+			
 	// ActionPickItem.StartExecution is called once per pickup, so that's a good one to patch
 	[HarmonyPatch(typeof(ActionPickItem), nameof(ActionPickItem.StartExecution))]
 	[HarmonyPrefix]
@@ -133,23 +137,35 @@ public class Patches {
 		}
 	}
 	
+	private static bool shop2Finished = false, shop3Finished = false;
+	public static InteractionPickItem WaitingBoydInteraction = null;
+	
+	[HarmonyPatch(typeof(BoydCS), nameof(BoydCS.PreSequenceInternal))]
+	[HarmonyPrefix]
+	static void CacheBoydVariables() {
+		shop2Finished = DialogueLua.GetVariable("NPCs.Boyd_Shop2_Finished", false);
+		shop3Finished = DialogueLua.GetVariable("NPCs.Boyd_Shop3_Finished", false);
+	}
+	
 	[HarmonyPatch(typeof(BoydCS), nameof(BoydCS.PostSequenceInternal))]
 	[HarmonyPrefix]
 	static bool TrackingCenterRewards() {
+		Melon<Randomizer>.Logger.Msg("BoydCS prefix entered");
 		if (DialogueLua.GetVariable("Quest.SQ02_State5_Completed", false)) {
-			if (DialogueLua.GetVariable("ShopBuildingData_BoydShop_03", false) &&
-				!DialogueLua.GetVariable("NPCs.Boyd_Shop3_Finished", false)) {
-				Melon<Randomizer>.Logger.Msg("tracking center 3 location being checked");
+			log("first if block entered");
+			if (DialogueLua.GetVariable("ShopBuildingData_BoydShop_03", false) && !shop3Finished) {
+				Melon<Randomizer>.Logger.Msg("tracking center 3 branch entered");
 				return true; // temporary true, until the location (id 55) is in scope
 				//return false;
-			} else if (DialogueLua.GetVariable("ShopBuildingData_BoydShop_02", false) &&
-				!DialogueLua.GetVariable("NPCs.Boyd_Shop2_Finished", false)) {
+			} else if (DialogueLua.GetVariable("ShopBuildingData_BoydShop_02", false) && !shop2Finished) {
+				log("tracking center 2 branch entered");
 				ItemData item = LocationFinder.ItemBeingFound(54, true);
-				DialogueLua.SetVariable("NPCs.Boyd_Shop2_Finished", true);
+				// DialogueLua.SetVariable("NPCs.Boyd_Shop2_Finished", true);
+				// that variable gets set before PostSequenceInteral executes
 				InteractionPickItem interaction = UnityEngine.Object.Instantiate(
 					ItemGiver.APPickItem, ItemGiver.APScene).Cast<InteractionPickItem>();
 				interaction._ItemData = item;
-				interaction.ExecutePickItem();
+				WaitingBoydInteraction = interaction;
 				SessionTools.SendLocation(54);
 				return false;
 			}
@@ -212,16 +228,17 @@ public class Patches {
 			Quests.CheckForQuestItem(itemId);
 		}
 		SessionTools.SendLocation(id);
-		if (shopItemData._ItemData == ItemGiver.APItemData) {
-			LocationFinder.UnscoutedLocations.Add(id);
-		}
+		LocationFinder.ItemBeingFound(id, true); // for the side effects
 		if (ItemGiver.ProgressiveItems.ContainsKey(itemId)) {
-			ItemGiver.ProgressiveItems[itemId]++;
 			ShopItemData otherData;
+			long otherId;
 			for (int i = 0; i < __instance.Items.Count; i++) {
 				otherData = __instance.Items[i];
 				if (otherData != shopItemData) {
-					otherData._ItemData = LocationFinder.ItemBeingFound(id, false);
+					otherId = LocationFinder.IdFromSerializationData(otherData.VariableName);
+					if (otherId > 0) {
+						otherData._ItemData = LocationFinder.ItemBeingFound(otherId, false);
+					}
 				}
 			}
 		}
@@ -246,6 +263,13 @@ public class Patches {
 			DialogueLua.GetVariable("Archipelago_ItemsBeforeLocations").isTable) {
 			ItemGiver.ItemsBeforeLocations = TableHandler.TableToDict(
 				DialogueLua.GetVariable("Archipelago_ItemsBeforeLocations").asTable.luaTable);
+		}
+		if (DialogueLua.DoesVariableExist("Archipelago_Progressive_Items") &&
+			DialogueLua.GetVariable("Archipelago_Progressive_Items").isTable) {
+			ItemGiver.FillProgressiveItems(TableHandler.TableToDictInt(
+				DialogueLua.GetVariable("Archipelago_Progressive_Items").asTable.luaTable));
+		} else {
+			ItemGiver.FillProgressiveItems(null);
 		}
 		Biomorphs.CreateFreeBiomorphs();
 		if (!SessionTools.CheckConnection()) {
@@ -302,6 +326,8 @@ public class Patches {
 		} else {
 			DialogueLua.SetVariable("Archipelago_ItemsBeforeLocations", new Il2CppLanguage.Lua.LuaNil());
 		}
+		DialogueLua.SetVariable("Archipelago_Progressive_Items",
+			TableHandler.DictToTable(ItemGiver.ProgressiveItems));
 	}
 	
 	[HarmonyPatch(typeof(PanelSwitcherUI), nameof(PanelSwitcherUI.UISwitchPanel))]
@@ -317,7 +343,7 @@ public class Patches {
 		BiomorphRewardHolder rewards = ItemGiver.APPickItemGO.AddComponent<BiomorphRewardHolder>();
 		Biomorphs.SetAndFillBiomorphRewards(rewards);
 		LocationFinder.FillLocationDictionary();
-		ItemGiver.FillProgressiveItems();
+		// ItemGiver.FillProgressiveItems();
 	}
 	
 	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
@@ -330,28 +356,36 @@ public class Patches {
 	[HarmonyPatch(typeof(MindBreakArea), nameof(MindBreakArea.OnMindBreak))]
 	[HarmonyPostfix]
 	static void RecordBiomorph(MonsterData monsterData, SerializationData serializationDataMindBreak) {
+		if (serializationDataMindBreak == null || monsterData == null) {
+			return; // This method is also called when turning back into Harlo
+		}
 		Biomorphs.RecordBiomorph(monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1),
 			serializationDataMindBreak.VariableName);
 	}
 	
 	private static bool PrefixForApply(BiomorphRewardData instance) {
+		Melon<Randomizer>.Logger.Msg("PrefixForApply entered");
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
 			instance._RewardID = instance._RewardID.Substring(3);
 			return true;
 		} else if (instance.ItemData != null && long.TryParse(instance.ItemData._NameID, out locationId)) {
 			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
-			InteractionPickItem interaction = UnityEngine.Object.Instantiate(ItemGiver.APPickItem,
-				ItemGiver.APScene).Cast<InteractionPickItem>();
-			interaction._ItemQuantity = 1;
-			interaction._ItemData = item;
-			interaction.ExecutePickItem();
+			instance._ItemData = item;
 			SessionTools.SendLocation(locationId);
 			LocationFinder.RecordLocationSerializationData(locationId);
+			// the notification for the item is already displayed, so we give the item silently
+			InventoryHandler.UpdateItem(item, 1);
 			return false;
 		} else {
 			return true; // Unrandomized reward
 		}
+	}
+	
+	[HarmonyPatch(typeof(BiomorphRewardData), nameof(BiomorphRewardData.Apply))]
+	[HarmonyPrefix]
+	static bool Arsenal(BiomorphRewardData __instance) {
+		return PrefixForApply(__instance);
 	}
 	
 	[HarmonyPatch(typeof(BiomorphRewardDataArsenal), nameof(BiomorphRewardDataArsenal.Apply))]

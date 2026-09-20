@@ -36,7 +36,7 @@ public static class LocationFinder {
 	private static Dictionary<long, string> reverseLocationDictionary;
 	
 	public static long IdFromSerializationData(string data) {
-		if (locationDictionary.ContainsKey(data)) {
+		if (locationDictionary.ContainsKey(data) && IsLocationIncluded(locationDictionary[data])) {
 			return locationDictionary[data];
 		} else {
 			return -1;
@@ -45,7 +45,7 @@ public static class LocationFinder {
 	
 	public static void CheckForGoal() {
 		bool goalCondition = DialogueLua.GetVariable("SerializationData_Z01_Map_01", 0) > 0 ||
-			DialogueLua.GetVariable("SerializationData_Z01_Map_01", 0) > 0;
+			DialogueLua.GetVariable("SerializationData_Z01_Map_10", 0) > 0;
 		if (goalCondition && SessionTools.CheckConnection()) {
 			SessionTools.SendGoal();
 		}
@@ -87,6 +87,9 @@ public static class LocationFinder {
 			if (itemIsBeingGranted) {
 				LocationFinder.UnscoutedLocations.Add(id);
 			}
+		}
+		if (itemIsBeingGranted) {
+			Quests.CheckForQuestLocation(id);
 		}
 		return result;
 	}
@@ -145,7 +148,7 @@ public static class LocationFinder {
 		locationDictionary.Add("ShopItemData_Blueprint_ChipImprinterShop_02", 18);
 		locationDictionary.Add("ShopItemData_LogicBlocks_AsrarShop_01", 19);
 		locationDictionary.Add("ShopItemData_Mementos_17_SapphireStainedGlass_01", 20);
-		locationDictionary.Add("ShopItemData_LogicBlocks_AsrarShop_01", 21);
+		locationDictionary.Add("ShopItemData_LogicBlocks_AsrarShop_02", 21);
 		locationDictionary.Add("ShopItemData_Items_EfficiencyModule_Asrar_01", 22);
 		locationDictionary.Add("ShopItemData_LogicBlocks_SalmShop_01", 23);
 		locationDictionary.Add("ShopItemData_Mementos_07_PositiveSolenoid_01", 24);
