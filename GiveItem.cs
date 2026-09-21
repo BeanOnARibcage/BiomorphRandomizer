@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 using Il2CppLDS.Sardonyx.Actions;
 using System.Collections.Generic;
 using Il2CppLDS.Framework.Core;
+using Il2CppPixelCrushers.DialogueSystem;
 
 namespace BiomorphRandomizer;
 
@@ -173,6 +174,7 @@ public static class ItemGiver {
 				BiomorphRewardData reward = Biomorphs.BiomorphRewards[ones];
 				if (itemIsBeingGranted) {
 					Biomorphs.Apply(reward);
+					DialogueLua.SetVariable("Archipelago_Biomorphs_" + ones.ToString("D2"), true);
 				}
 				return reward.ItemData;
 			case 3: // Blueprints

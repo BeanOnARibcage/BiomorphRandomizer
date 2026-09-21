@@ -111,11 +111,6 @@ public static class SessionTools {
 	
 	// returns true if we should immediately check for the next item (i.e. if money was dequeued)
 	public static bool CheckForAndReceiveItem() {
-		if (Patches.WaitingBoydInteraction != null && ItemGiver.CanGetItem()) {
-			Patches.WaitingBoydInteraction.ExecutePickItem();
-			Patches.WaitingBoydInteraction = null;
-			return false;
-		}
 		if (CheckConnection() && Session.Items.Any() && ItemGiver.CanGetItem() 
 			&& ItemGiver.APPickItem != null && SlotData != null) {
 			ItemInfo item;

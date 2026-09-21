@@ -244,14 +244,15 @@ public class Patches {
 		}
 	}
 	
-	[HarmonyPatch(typeof(SaveSlotUI), nameof(SaveSlotUI.UISaveSlotClick))]
-	[HarmonyPrefix]
-	static void Connect(SaveSlotUI __instance) {
-	}
+	// [HarmonyPatch(typeof(SaveSlotUI), nameof(SaveSlotUI.UISaveSlotClick))]
+	// [HarmonyPrefix]
+	// static void Connect(SaveSlotUI __instance) {
+	// }
 	
 	[HarmonyPatch(typeof(PersistentDataManager), nameof(PersistentDataManager.ApplySaveData))]
 	[HarmonyPostfix]
 	static void ReadArchipelagoData() {
+		log("PersistentDataManager.ApplySaveData postfix entered");
 		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
 		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
 		if (DialogueLua.DoesVariableExist("Archipelago_UnscoutedLocations") &&
@@ -272,6 +273,7 @@ public class Patches {
 			ItemGiver.FillProgressiveItems(null);
 		}
 		Biomorphs.CreateFreeBiomorphs();
+		Biomorphs.ShouldApplyLoadedBiomorphRewards = true;
 		if (!SessionTools.CheckConnection()) {
 			SessionTools.Connect();
 		}
@@ -416,6 +418,81 @@ public class Patches {
 	[HarmonyPrefix]
 	static bool Defense(BiomorphRewardDataDefense __instance) {
 		return PrefixForApply(__instance);
+	}
+	/*
+	private static string biomorphsStem = null;
+	
+	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnMindBreak))]
+	[HarmonyPrefix]
+	static void OuterPrefix(MonsterData monsterData, SerializationData serializationData) {
+		if (serializationData == null) {
+			return;
+		}
+		if (monsterData._NameID == "") {
+			return;
+		}
+		string monsterName = monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1);
+		if (Biomorphs.IsBiomorphable(monsterName)) {
+			Biomorphs.TempRemoveFreeBiomorph(monsterName);
+			biomorphsStem = serializationData.VariableName.Remove(serializationData.VariableName.Length - 2);
+			Biomorphs.TempRemoveBiomorphs(biomorphsStem);
+		}
+	}
+	
+	[HarmonyPatch(typeof(MonsterData), nameof(MonsterData.EvaluateBiomorphReward))]
+	[HarmonyPrefix]
+	static void InnerPrefix(MonsterData __instance) {
+		if (__instance._NameID == "") {
+			return;
+		}
+		string monsterName = __instance._TextTable.GetFieldTextForLanguage(__instance._NameID, 1);
+		if (Biomorphs.IsBiomorphable(monsterName)) {
+			Biomorphs.TempRemoveFreeBiomorph(monsterName);
+			
+			if (biomorphsStem != null) {
+				Biomorphs.RestoreBiomorphs(biomorphsStem);
+			}
+		}
+	}
+	
+	[HarmonyPatch(typeof(MonsterData), nameof(MonsterData.EvaluateBiomorphReward))]
+	[HarmonyPostfix]
+	static void InnerPostfix(MonsterData __instance) {
+		if (__instance._NameID == "") {
+			return;
+		}
+		string monsterName = __instance._TextTable.GetFieldTextForLanguage(__instance._NameID, 1);
+		Biomorphs.RestoreFreeBiomorph(monsterName);
+		
+		if (biomorphsStem != null) {
+			Biomorphs.TempRemoveBiomorphs(biomorphsStem);
+		}
+	}
+	*/
+	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnMindBreak))]
+	[HarmonyPostfix]
+	static void OuterPostfix(MonsterData monsterData, SerializationData serializationData) {
+		if (serializationData == null || monsterData == null || monsterData._NameID == ""
+			|| monsterData._TextTable == null) {
+			return;
+		}
+		string monsterName = monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1);
+		if (Biomorphs.IsBiomorphable(monsterName)) {
+			// Biomorphs.RestoreBiomorphs(biomorphsStem);
+			// biomorphsStem = null;
+			// Biomorphs.RestoreFreeBiomorph(monsterName);
+			if (!Biomorphs.IsMonsterUnlocked(monsterName) &&
+				ProgressHandler.BiomorphRewardArsenal.Contains(monsterData)) {
+				ProgressHandler.BiomorphRewardArsenal.Remove(monsterData);
+			}
+		}
+	}
+	
+	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnLoad))]
+	[HarmonyPostfix]
+	static void GrantBiomorphRewards() {
+		log("ProgressHandler.OnLoad postfix entered");
+		// switch everything past this to Update() when the above bool is false
 	}
 	
 	/*

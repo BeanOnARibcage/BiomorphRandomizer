@@ -24,19 +24,33 @@ public class Randomizer : MelonMod {
 		if (SessionTools.LocationScouts == null && SessionTools.ScoutTask != null) {
 			SessionTools.ReceiveLocationScouts();
 		}
-		bool itemGiven;
+		bool checkAgain = false;
 		updateCounter++;
 		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
-			if (SessionTools.CheckConnection()) {	
-				itemGiven = SessionTools.CheckForAndReceiveItem();
-				while (itemGiven) {
-					itemGiven = SessionTools.CheckForAndReceiveItem();
+			if (Biomorphs.ShouldApplyLoadedBiomorphRewards && ItemGiver.CanGetItem()) {
+				LoggerInstance.Msg("About to apply loaded biomorph rewards");
+				try {
+					LoggerInstance.Msg("Entered try block");
+					Biomorphs.ApplyObtainedBiomorphRewards();
+					LoggerInstance.Msg("ApplyObtainedBiomorphRewards returned");
+				} catch (Exception e) {
+					LoggerInstance.Msg("Displaying stack trace:");
+					LoggerInstance.Msg(e.StackTrace);
+					throw;
 				}
+				LoggerInstance.Msg("Biomorph rewards applied without an exception");
+			} else if (Patches.WaitingBoydInteraction != null && ItemGiver.CanGetItem()) {
+				Patches.WaitingBoydInteraction.ExecutePickItem();
+				Patches.WaitingBoydInteraction = null;
+			} else if (SessionTools.CheckConnection()) {	
+				checkAgain = SessionTools.CheckForAndReceiveItem();
 				LocationFinder.CheckForGoal();
 			} else {
 				SessionTools.Reconnect();
 			}
-			updateCounter = 0;
+			if (!checkAgain) {
+				updateCounter = 0;
+			}
 		}
 	}
 }
