@@ -121,6 +121,7 @@ public static class ItemGiver {
 	private static bool newData;
 	
 	public static void FillProgressiveItems(Dictionary<long, int> loadedProgressiveItems) {
+		Melon<Randomizer>.Logger.Msg("FillProgressiveItems entered");
 		if (loadedProgressiveItems != null) {
 			newData = false;
 			ProgressiveItems = loadedProgressiveItems;
@@ -134,13 +135,16 @@ public static class ItemGiver {
 		addProgressiveEntry(300, false); // 3 eventually
 		// addProgressiveEntry(304, false);
 		// addProgressiveEntry(316, false);
+		Melon<Randomizer>.Logger.Msg("FillProgressiveItems exit");
 	}
 	
 	private static void addProgressiveEntry(long id, bool threeCopies) {
+		Melon<Randomizer>.Logger.Msg("addProgressiveEntry entered");
 		if (newData) {
 			ProgressiveItems.Add(id, 0);
 		}
 		ProgressiveThreeCopies.Add(id, threeCopies);
+		Melon<Randomizer>.Logger.Msg("addProgressiveEntry exit");
 	}
 	
 	// public static ItemData GetItemData(long id) {

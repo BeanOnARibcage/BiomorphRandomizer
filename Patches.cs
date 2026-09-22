@@ -370,6 +370,7 @@ public class Patches {
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
 			instance._RewardID = instance._RewardID.Substring(3);
+			Melon<Randomizer>.Logger.Msg("PrefixForApply exit 1");
 			return true;
 		} else if (instance.ItemData != null && long.TryParse(instance.ItemData._NameID, out locationId)) {
 			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
@@ -378,8 +379,10 @@ public class Patches {
 			LocationFinder.RecordLocationSerializationData(locationId);
 			// the notification for the item is already displayed, so we give the item silently
 			InventoryHandler.UpdateItem(item, 1);
+			Melon<Randomizer>.Logger.Msg("PrefixForApply exit 2");
 			return false;
 		} else {
+			Melon<Randomizer>.Logger.Msg("PrefixForApply exit 3");
 			return true; // Unrandomized reward
 		}
 	}
@@ -472,8 +475,10 @@ public class Patches {
 	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnMindBreak))]
 	[HarmonyPostfix]
 	static void OuterPostfix(MonsterData monsterData, SerializationData serializationData) {
+		Melon<Randomizer>.Logger.Msg("OuterPostfix entered");
 		if (serializationData == null || monsterData == null || monsterData._NameID == ""
 			|| monsterData._TextTable == null) {
+			Melon<Randomizer>.Logger.Msg("OuterPostfix exit 1");
 			return;
 		}
 		string monsterName = monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1);
@@ -486,14 +491,15 @@ public class Patches {
 				ProgressHandler.BiomorphRewardArsenal.Remove(monsterData);
 			}
 		}
+		Melon<Randomizer>.Logger.Msg("OuterPostfix exit 2");
 	}
 	
-	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnLoad))]
-	[HarmonyPostfix]
-	static void GrantBiomorphRewards() {
-		log("ProgressHandler.OnLoad postfix entered");
-		// switch everything past this to Update() when the above bool is false
-	}
+	// [HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnLoad))]
+	// [HarmonyPostfix]
+	// static void GrantBiomorphRewards() {
+	// 	log("ProgressHandler.OnLoad postfix entered");
+	// 	// switch everything past this to Update() when the above bool is false
+	// }
 	
 	/*
 	// Methods to log the scene-loading functions
