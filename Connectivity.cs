@@ -127,7 +127,7 @@ public static class SessionTools {
 				itemsDequeued++;
 				bool local = item.Player.Equals(ActivePlayer);
 				if (local && !LocationFinder.IsLocationChecked(item.LocationId)) {
-					ItemGiver.ItemsBeforeLocations.Add(item.LocationId, item.ItemId);
+					ItemGiver.ItemsBeforeLocations[item.LocationId] = item.ItemId;
 				}
 				ItemGiver.GiveItemFromId(item.ItemId, local, item.LocationId);
 				ItemsProcessed++;
