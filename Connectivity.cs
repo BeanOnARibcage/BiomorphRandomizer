@@ -59,9 +59,11 @@ public static class SessionTools {
 			if (ScoutTask.IsCompletedSuccessfully) {
 				LocationScouts = ScoutTask.Result;
 				Biomorphs.SetUpBiomorphLocations();
+				ScoutTask = null;
 			} else {
 				Melon<Randomizer>.Logger.Msg("Scouts not received successfully");
 				Melon<Randomizer>.Logger.Msg("Status: " + ScoutTask.Status.ToString());
+				Biomorphs.SetUpBiomorphLocations();
 				ScoutTask = null;
 			}
 		}

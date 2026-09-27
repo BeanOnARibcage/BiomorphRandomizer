@@ -342,8 +342,8 @@ public class Patches {
 			return;
 		}
 		ItemGiver.MakeAPInteraction();
-		BiomorphRewardHolder rewards = ItemGiver.APPickItemGO.AddComponent<BiomorphRewardHolder>();
-		Biomorphs.SetAndFillBiomorphRewards(rewards);
+		// BiomorphRewardHolder rewards = ItemGiver.APPickItemGO.AddComponent<BiomorphRewardHolder>();
+		// Biomorphs.SetAndFillBiomorphRewards(rewards);
 		LocationFinder.FillLocationDictionary();
 		// ItemGiver.FillProgressiveItems();
 	}
