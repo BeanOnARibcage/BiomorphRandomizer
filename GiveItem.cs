@@ -175,7 +175,7 @@ public static class ItemGiver {
 			case 1: // Abilities
 				return items.Abilities[ones];
 			case 2: // Biomorphs
-				BiomorphRewardData reward = Biomorphs.BiomorphRewards[ones];
+				BiomorphRewardData reward = Biomorphs.GetBiomorphRewardData(ones);
 				if (itemIsBeingGranted) {
 					Biomorphs.Apply(reward);
 					DialogueLua.SetVariable("Archipelago_Biomorphs_" + ones.ToString("D2"), true);
@@ -203,22 +203,6 @@ public static class ItemGiver {
 			default:
 				return null;
 		}
-	}
-	
-	public static BiomorphRewardData GetBiomorphRewardData(long id) {
-		int ones, hundreds;
-		hundreds = Math.DivRem((int)id, 100, out ones);
-		if (hundreds != 2) {
-			return null;
-		}
-		if (ProgressiveItems.ContainsKey(id)) {
-			if (ProgressiveThreeCopies[id]) {
-				ones += Math.Clamp(ProgressiveItems[id], 0, 2);
-			} else {
-				ones += Math.Clamp(ProgressiveItems[id], 0, 1);
-			}
-		}
-		return Biomorphs.BiomorphRewards[ones];
 	}
 }
 

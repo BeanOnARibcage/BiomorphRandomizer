@@ -39,9 +39,9 @@ public class Randomizer : MelonMod {
 					throw;
 				}
 				LoggerInstance.Msg("Biomorph rewards applied without an exception");
-			} else if (Patches.WaitingBoydInteraction != null && ItemGiver.CanGetItem()) {
-				Patches.WaitingBoydInteraction.ExecutePickItem();
-				Patches.WaitingBoydInteraction = null;
+			} else if (Patches.WaitingInteraction != null && ItemGiver.CanGetItem()) {
+				Patches.WaitingInteraction.ExecutePickItem();
+				Patches.WaitingInteraction = null;
 			} else if (SessionTools.CheckConnection()) {	
 				checkAgain = SessionTools.CheckForAndReceiveItem();
 				LocationFinder.CheckForGoal();

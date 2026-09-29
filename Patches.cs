@@ -23,6 +23,8 @@ public class Patches {
 	private static void log(string message) {
 		Melon<Randomizer>.Logger.Msg(message);
 	}
+	
+	public static InteractionPickItem WaitingInteraction = null;
 			
 	// ActionPickItem.StartExecution is called once per pickup, so that's a good one to patch
 	[HarmonyPatch(typeof(ActionPickItem), nameof(ActionPickItem.StartExecution))]
@@ -138,7 +140,6 @@ public class Patches {
 	}
 	
 	private static bool shop2Finished = false, shop3Finished = false;
-	public static InteractionPickItem WaitingBoydInteraction = null;
 	
 	[HarmonyPatch(typeof(BoydCS), nameof(BoydCS.PreSequenceInternal))]
 	[HarmonyPrefix]
@@ -165,7 +166,7 @@ public class Patches {
 				InteractionPickItem interaction = UnityEngine.Object.Instantiate(
 					ItemGiver.APPickItem, ItemGiver.APScene).Cast<InteractionPickItem>();
 				interaction._ItemData = item;
-				WaitingBoydInteraction = interaction;
+				WaitingInteraction = interaction;
 				SessionTools.SendLocation(54);
 				return false;
 			}
@@ -345,7 +346,6 @@ public class Patches {
 		// BiomorphRewardHolder rewards = ItemGiver.APPickItemGO.AddComponent<BiomorphRewardHolder>();
 		// Biomorphs.SetAndFillBiomorphRewards(rewards);
 		LocationFinder.FillLocationDictionary();
-		// ItemGiver.FillProgressiveItems();
 	}
 	
 	[HarmonyPatch(typeof(SceneHandler), nameof(SceneHandler.LoadMapsInternalAsync))]
@@ -366,7 +366,6 @@ public class Patches {
 	}
 	
 	private static bool PrefixForApply(BiomorphRewardData instance) {
-		Melon<Randomizer>.Logger.Msg("PrefixForApply entered");
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
 			instance._RewardID = instance._RewardID.Substring(3);
@@ -374,15 +373,14 @@ public class Patches {
 			return true;
 		} else if (instance.ItemData != null && long.TryParse(instance.ItemData._NameID, out locationId)) {
 			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
-			instance._ItemData = item;
 			SessionTools.SendLocation(locationId);
 			LocationFinder.RecordLocationSerializationData(locationId);
-			// the notification for the item is already displayed, so we give the item silently
-			InventoryHandler.UpdateItem(item, 1);
-			Melon<Randomizer>.Logger.Msg("PrefixForApply exit 2");
+			InteractionPickItem interaction = 
+				UnityEngine.Object.Instantiate(ItemGiver.APPickItem).Cast<InteractionPickItem>();
+			interaction._ItemData = item;
+			WaitingInteraction = interaction;
 			return false;
 		} else {
-			Melon<Randomizer>.Logger.Msg("PrefixForApply exit 3");
 			return true; // Unrandomized reward
 		}
 	}
@@ -422,6 +420,30 @@ public class Patches {
 	static bool Defense(BiomorphRewardDataDefense __instance) {
 		return PrefixForApply(__instance);
 	}
+	
+	private static bool showNotifications = true;
+	
+	[HarmonyPatch(typeof(MonsterData), nameof(MonsterData.EvaluateBiomorphReward))]
+	[HarmonyPrefix]
+	static void DisableNotifications() {
+		log("Notifications Disabled");
+		showNotifications = false;
+	}
+	
+	[HarmonyPatch(typeof(MonsterData), nameof(MonsterData.EvaluateBiomorphReward))]
+	[HarmonyPostfix]
+	static void EnableNotifications() {
+		log("Notifications Enabled");
+		showNotifications = true;
+	}
+	
+	[HarmonyPatch(typeof(NotificationScreen), nameof(NotificationScreen.CoroutineShow))]
+	[HarmonyPrefix]
+	static bool NotificationPrefix() {
+		log("CoroutineShow prefix entered; " + showNotifications.ToString());
+		return showNotifications;
+	}
+	
 	/*
 	private static string biomorphsStem = null;
 	
@@ -475,10 +497,8 @@ public class Patches {
 	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnMindBreak))]
 	[HarmonyPostfix]
 	static void OuterPostfix(MonsterData monsterData, SerializationData serializationData) {
-		Melon<Randomizer>.Logger.Msg("OuterPostfix entered");
 		if (serializationData == null || monsterData == null || monsterData._NameID == ""
 			|| monsterData._TextTable == null) {
-			Melon<Randomizer>.Logger.Msg("OuterPostfix exit 1");
 			return;
 		}
 		string monsterName = monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1);
@@ -491,7 +511,6 @@ public class Patches {
 				ProgressHandler.BiomorphRewardArsenal.Remove(monsterData);
 			}
 		}
-		Melon<Randomizer>.Logger.Msg("OuterPostfix exit 2");
 	}
 	
 	// [HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnLoad))]
