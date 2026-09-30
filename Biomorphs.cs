@@ -17,9 +17,9 @@ public static class Biomorphs {
 	public static Dictionary<string, int> rewardsIndexByName;
 	
 	public static void SetAndFillBiomorphRewards() {
-		if (SessionTools.CheckConnection()) {
-			return; // This should only be executed before the data in the database has been modified
-		}
+		// if (SessionTools.CheckConnection()) {
+		// 	return; // This should only be executed before the data in the database has been modified
+		// }
 		rewardsIndexByName = new Dictionary<string, int>();
 		// BiomorphRewardData reward, firstReward;
 		// ItemData itemData;
@@ -35,7 +35,7 @@ public static class Biomorphs {
 			// These lines are the only part I want to keep
 			monsterName = monster._TextTable.GetFieldTextForLanguage(monster._NameID, 1);
 			rewardsIndexByName.Add(monsterName, arsenalIndex);
-			arsenalIndex++;
+			arsenalIndex += 3;
 			
 			// reward = UnityEngine.Object.Instantiate(monster.BiomorphRewards[1]._BiomorphReward)
 			// 	.Cast<BiomorphRewardData>();
@@ -61,20 +61,20 @@ public static class Biomorphs {
 	}
 	
 	public static void SetUpBiomorphLocations() {
-		SetMonsterRewards(5, 2000); // Fubirang
-		SetMonsterRewards(12, 2003); // Scarbyttle
-	}
+	// 	SetMonsterRewards(5, 2000); // Fubirang
+	// 	SetMonsterRewards(12, 2003); // Scarbyttle
+	// }
 	
-	private static void SetMonsterRewards(int monsterIndex, long firstId) {
-		MonsterData monster = InventoryHandler.ItemDatabase.BiomorphArsenal[monsterIndex];
-		for (int i = 0; i < 3; i++) {
-			if (LocationFinder.IsLocationIncluded(firstId + i)) {
-				ItemData item = LocationFinder.ItemBeingFound(firstId + i, false);
-				item = UnityEngine.Object.Instantiate(item).Cast<ItemData>();
-				item._NameID = (firstId + i).ToString();
-				monster.BiomorphRewards[i]._BiomorphReward._ItemData = item;
-			}
-		}
+	// private static void SetMonsterRewards(int monsterIndex, long firstId) {
+	// 	MonsterData monster = InventoryHandler.ItemDatabase.BiomorphArsenal[monsterIndex];
+	// 	for (int i = 0; i < 3; i++) {
+	// 		if (LocationFinder.IsLocationIncluded(firstId + i)) {
+	// 			ItemData item = LocationFinder.ItemBeingFound(firstId + i, false);
+	// 			item = UnityEngine.Object.Instantiate(item).Cast<ItemData>();
+	// 			item._NameID = (firstId + i).ToString();
+	// 			monster.BiomorphRewards[i]._BiomorphReward._ItemData = item;
+	// 		}
+	// 	}
 	}
 	
 	public static void ShuffleFreeBiomorphs(string room) {
@@ -162,6 +162,33 @@ public static class Biomorphs {
 		reward.Apply();
 	}
 	
+	// Takes a BiomorphRewardData that the game is trying to apply and returns
+	// the corresponding locaiton id
+	public static long FindBiomorphLocationId(BiomorphRewardData reward) {
+		MonsterData testMonster;
+		int rewardIndex;
+		testMonster = InventoryHandler.ItemDatabase.BiomorphArsenal[5]; // Fubirang
+		rewardIndex = testRewardList(reward, testMonster);
+		if (rewardIndex >= 0) {
+			return 2000 + rewardIndex;
+		}
+		testMonster = InventoryHandler.ItemDatabase.BiomorphArsenal[12]; // Scarbyttle
+		rewardIndex = testRewardList(reward, testMonster);
+		if (rewardIndex >= 0) {
+			return 2003 + rewardIndex;
+		}
+		return -1;
+	}
+		
+	private static int testRewardList(BiomorphRewardData reward, MonsterData monster) {
+		for (int i = 0; i < 3; i++) {
+			if (monster.BiomorphRewards[i]._BiomorphReward == reward) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	// private static List<int> biomorphStorage;
 	
 	public static bool IsBiomorphable(string monsterName) {
@@ -171,6 +198,15 @@ public static class Biomorphs {
 	public static bool IsMonsterUnlocked(string monsterName) {
 		int index = rewardsIndexByName[monsterName];
 		return DialogueLua.GetVariable("Archipelago_Biomorphs_" + index.ToString("D2"), false);
+	}
+	
+	public static IEnumerable<MonsterData> AllUnlockedMonsters() {
+		foreach (MonsterData monster in InventoryHandler.ItemDatabase.BiomorphArsenal) {
+			string monsterName = monster._TextTable.GetFieldTextForLanguage(monster._NameID, 1);
+			if (IsMonsterUnlocked(monsterName)) {
+				yield return monster;
+			}
+		}
 	}
 	
 	public static BiomorphRewardData GetBiomorphRewardData(int ones) {

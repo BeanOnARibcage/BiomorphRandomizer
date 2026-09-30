@@ -110,6 +110,7 @@ public static class ItemGiver {
 		SceneManager.MoveGameObjectToScene(APPickItemGO, APScene);
 		APPickItem = APPickItemGO.AddComponent<InteractionPickItem>();
 		APPickItem._ShowNotification = true;
+		APPickItem._ItemQuantity = 1;
 		APItemData = UnityEngine.Object.Instantiate(InventoryHandler.ItemDatabase.Laptops).Cast<ItemData>();
 		APPickItem._ItemData = APItemData;
 		APItemData._NameID = "Randomized Item";

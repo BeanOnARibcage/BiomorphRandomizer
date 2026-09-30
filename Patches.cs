@@ -344,7 +344,7 @@ public class Patches {
 		}
 		ItemGiver.MakeAPInteraction();
 		// BiomorphRewardHolder rewards = ItemGiver.APPickItemGO.AddComponent<BiomorphRewardHolder>();
-		// Biomorphs.SetAndFillBiomorphRewards(rewards);
+		Biomorphs.SetAndFillBiomorphRewards();
 		LocationFinder.FillLocationDictionary();
 	}
 	
@@ -369,9 +369,12 @@ public class Patches {
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
 			instance._RewardID = instance._RewardID.Substring(3);
-			Melon<Randomizer>.Logger.Msg("PrefixForApply exit 1");
 			return true;
-		} else if (instance.ItemData != null && long.TryParse(instance.ItemData._NameID, out locationId)) {
+		} else {
+			locationId = Biomorphs.FindBiomorphLocationId(instance);
+			if (locationId == -1) {
+				return true; // Unrandomized reward
+			}
 			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
 			SessionTools.SendLocation(locationId);
 			LocationFinder.RecordLocationSerializationData(locationId);
@@ -380,8 +383,6 @@ public class Patches {
 			interaction._ItemData = item;
 			WaitingInteraction = interaction;
 			return false;
-		} else {
-			return true; // Unrandomized reward
 		}
 	}
 	
@@ -506,9 +507,9 @@ public class Patches {
 			// Biomorphs.RestoreBiomorphs(biomorphsStem);
 			// biomorphsStem = null;
 			// Biomorphs.RestoreFreeBiomorph(monsterName);
-			if (!Biomorphs.IsMonsterUnlocked(monsterName) &&
-				ProgressHandler.BiomorphRewardArsenal.Contains(monsterData)) {
-				ProgressHandler.BiomorphRewardArsenal.Remove(monsterData);
+			ProgressHandler.BiomorphRewardArsenal.Clear();
+			foreach (MonsterData monster in Biomorphs.AllUnlockedMonsters()) {
+				ProgressHandler.BiomorphRewardArsenal.Add(monster);
 			}
 		}
 	}
