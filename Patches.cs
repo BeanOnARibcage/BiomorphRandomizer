@@ -19,7 +19,7 @@ using Il2CppLDS.Framework.Actors;
 namespace BiomorphRandomizer;
 
 [HarmonyPatch]
-public class Patches {
+public static class Patches {
 	private static void log(string message) {
 		Melon<Randomizer>.Logger.Msg(message);
 	}
@@ -366,10 +366,13 @@ public class Patches {
 	}
 	
 	private static bool PrefixForApply(BiomorphRewardData instance) {
+		log("Apply: " + instance.name);
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
 			instance._RewardID = instance._RewardID.Substring(3);
 			return true;
+		} else if (!Randomizer.GameplayStarted) {
+			return false; // Don't let the game apply rewards as it's initializing
 		} else {
 			locationId = Biomorphs.FindBiomorphLocationId(instance);
 			if (locationId == -1) {
@@ -422,27 +425,14 @@ public class Patches {
 		return PrefixForApply(__instance);
 	}
 	
-	private static bool showNotifications = true;
-	
-	[HarmonyPatch(typeof(MonsterData), nameof(MonsterData.EvaluateBiomorphReward))]
-	[HarmonyPrefix]
-	static void DisableNotifications() {
-		log("Notifications Disabled");
-		showNotifications = false;
-	}
-	
-	[HarmonyPatch(typeof(MonsterData), nameof(MonsterData.EvaluateBiomorphReward))]
+	[HarmonyPatch(typeof(InventoryHandler), nameof(InventoryHandler.UpdateItem))]
 	[HarmonyPostfix]
-	static void EnableNotifications() {
-		log("Notifications Enabled");
-		showNotifications = true;
-	}
-	
-	[HarmonyPatch(typeof(NotificationScreen), nameof(NotificationScreen.CoroutineShow))]
-	[HarmonyPrefix]
-	static bool NotificationPrefix() {
-		log("CoroutineShow prefix entered; " + showNotifications.ToString());
-		return showNotifications;
+	static void WhereIsThisItemComingFrom(ItemData item) {
+		if (item == InventoryHandler.ItemDatabase.RawMaterials) {
+			log((new System.Diagnostics.StackTrace()).ToString());
+			log("Trying Il2CppSystem version too:");
+			log((new Il2CppSystem.Diagnostics.StackTrace()).ToString());
+		}
 	}
 	
 	/*

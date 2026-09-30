@@ -5,6 +5,7 @@ namespace BiomorphRandomizer;
 
 public class Randomizer : MelonMod {
 	private int updateCounter = 0;
+	public static bool GameplayStarted = false;
 	
 	public override void OnInitializeMelon() {
 		LoggerInstance.Msg("Randomizer Mod was loaded");
@@ -27,6 +28,9 @@ public class Randomizer : MelonMod {
 		bool checkAgain = false;
 		updateCounter++;
 		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
+			if (!GameplayStarted && ItemGiver.CanGetItem()) {
+				GameplayStarted = true;
+			}
 			if (Biomorphs.ShouldApplyLoadedBiomorphRewards && ItemGiver.CanGetItem()) {
 				LoggerInstance.Msg("About to apply loaded biomorph rewards");
 				try {
