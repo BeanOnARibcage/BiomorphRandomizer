@@ -27,7 +27,7 @@ public class Randomizer : MelonMod {
 		}
 		bool checkAgain = false;
 		updateCounter++;
-		if (updateCounter > 60) { // Checking for items every frame is probably not necessary
+		if (updateCounter > 30) { // Checking for items every frame is probably not necessary
 			if (!GameplayStarted && ItemGiver.CanGetItem()) {
 				GameplayStarted = true;
 			}

@@ -31,7 +31,13 @@ public static class ItemGiver {
 	// key is location ID and value is item ID
 	
 	public static bool CanGetItem() {
-		return GameManager.CanUseInteractions && APPickItem != null;
+		try {
+			return GameManager.Instance != null && GameManager.CanUseInteractions && APPickItem != null;
+			// hopefully testing whether Instance is null will take care of any exceptions,
+			// but I'll keep the try-catch just in case
+		} catch (NullReferenceException) {
+			return false; // This means the game is still initializing
+		}
 	}
 	
 	public static void GiveChip(Chips chip) {
