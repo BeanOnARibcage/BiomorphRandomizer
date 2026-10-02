@@ -1,5 +1,5 @@
-An Archipelago mod for Biomorph! It currently covers the beginning of the game, up until opening the door
-to the rest of Mezzo Skyway.
+An Archipelago mod for Biomorph! It currently covers from the beginning of the game through the end of
+Mezzo Skyway.
 
 ## Installation Instructions
 These instructions are for the Windows Steam version of the game. I haven't tested compatibility with other versions.
@@ -20,7 +20,7 @@ Save the file and start the game.
 The game will attempt to connect to the Archipelago multiworld when loading a save, using the connection info you entered in the preferences file. The game will show you what randomized items you find and receive, but if you
 want to use Archipelago commands like `!hint`, you'll need to use a text client.
 
-The current goal is to reach Blightmoor, complete Boyd's quest, and open the door at the end of Mezzo Skyway's first room.
+The current goal is to reach the Dunes of Time.
 
 ## Preferences
 \[biomorph_connection_info\]

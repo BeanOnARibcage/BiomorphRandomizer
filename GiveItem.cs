@@ -32,10 +32,8 @@ public static class ItemGiver {
 	
 	public static bool CanGetItem() {
 		try {
-			return GameManager.Instance != null && GameManager.CanUseInteractions && APPickItem != null;
-			// hopefully testing whether Instance is null will take care of any exceptions,
-			// but I'll keep the try-catch just in case
-		} catch (NullReferenceException) {
+			return GameManager.CanUseInteractions && APPickItem != null;
+		} catch (Il2CppException ie) when (ie.Message.StartsWith("System.NullReferenceException")) {
 			return false; // This means the game is still initializing
 		}
 	}
