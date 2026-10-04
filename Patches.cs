@@ -366,17 +366,18 @@ public static class Patches {
 	}
 	
 	private static bool PrefixForApply(BiomorphRewardData instance) {
-		log("Apply: " + instance.name);
 		long locationId;
 		if (instance._RewardID.StartsWith("AP_")) { //code that I'm the one who called the method
 			instance._RewardID = instance._RewardID.Substring(3);
 			return true;
-		} else if (!Randomizer.GameplayStarted) {
-			return false; // Don't let the game apply rewards as it's initializing
 		} else {
 			locationId = Biomorphs.FindBiomorphLocationId(instance);
 			if (locationId == -1) {
 				return true; // Unrandomized reward
+			}
+			if (GameManager.GameState == GameManager.EGameState.LoadGame ||
+				GameManager.GameState == GameManager.EGameState.ReturnToSAFE) {
+				return false; // Don't let the game apply rewards as it's initializing
 			}
 			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
 			SessionTools.SendLocation(locationId);
