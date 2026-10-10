@@ -19,7 +19,7 @@ public static class Quests {
 					DialogueLua.GetVariable("Archipelago_SQ02_State1_Item", false));
 				// Marle Kertar
 				DialogueLua.SetVariable("Quest.SQ20_State1_Completed",
-					DialogueLua.GetVariable("Archipelago_SQ02_State1_Item", false));
+					DialogueLua.GetVariable("Archipelago_SQ20_State1_Item", false));
 				goto case "Z03_06";
 			case "Z04_01":
 				// Boyd
@@ -35,7 +35,7 @@ public static class Quests {
 			case "Z04_06":
 				// Marle Kertar
 				DialogueLua.SetVariable("Quest.SQ20_State1_Completed",
-					DialogueLua.GetVariable("Archipelago_SQ02_State1_Location", false));
+					DialogueLua.GetVariable("Archipelago_SQ20_State1_Location", false));
 				return;
 			case "Z04_10":
 				// Meed

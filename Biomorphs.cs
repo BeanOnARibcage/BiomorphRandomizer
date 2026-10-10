@@ -189,7 +189,13 @@ public static class Biomorphs {
 		return -1;
 	}
 	
-	// private static List<int> biomorphStorage;
+	public static string MonsterName(MonsterData data) {
+		if (data._TextTable == null) {
+			return "";
+		} else {
+			return data._TextTable.GetFieldTextForLanguage(data._NameID, 1);
+		}
+	}
 	
 	public static bool IsBiomorphable(string monsterName) {
 		return currentFreeBiomorphs.ContainsKey(monsterName);
