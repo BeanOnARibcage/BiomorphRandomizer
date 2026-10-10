@@ -198,7 +198,8 @@ public static class Biomorphs {
 	}
 	
 	public static bool IsBiomorphable(string monsterName) {
-		return currentFreeBiomorphs.ContainsKey(monsterName);
+		return (monsterName != "") && currentFreeBiomorphs.ContainsKey(monsterName);
+		// no need to search the dictionary if I'm using "" as the default value
 	}
 	
 	public static bool IsMonsterUnlocked(string monsterName) {

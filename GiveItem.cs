@@ -81,11 +81,11 @@ public static class ItemGiver {
 			} // Having the bruisers before entering Z03_03 from the lower left locks you behind a door
 		}
 		if (id == (long)SessionTools.SlotData["starting_weapon"]) {
-			UnityEngine.Object.Destroy(interaction);
+			UnityEngine.Object.Destroy(interaction.gameObject);
 			return; // Starting weapon is always handled locally
 		}
 		if (local && !LocationFinder.UnscoutedLocations.Contains(locationId)) {
-			UnityEngine.Object.Destroy(interaction);
+			UnityEngine.Object.Destroy(interaction.gameObject);
 			return; // location was scouted and handled locally
 		}
 		interaction._ItemData = GetItemData(id, true);

@@ -178,6 +178,16 @@ public static class Patches {
 	[HarmonyPrefix]
 	static void Shop(ActionInteractionShop __instance) {
 		InteractionShop interaction = __instance.Interaction;
+		if (interaction._ShopNameID == "UI_CityRegistry") {
+			// Special handling to stop the player from building the laboratory early
+			// Since that prevents the conversation where Meed gives you the blueprint from happening
+			if (interaction.Items[9].UnlockConditions.Count < 2) {
+				SerializationData extraCondition = new SerializationData();
+				extraCondition._VariableName = "Archipelago_SQ35_State3_Location";
+				extraCondition.name = "Archipelago_SQ35_State3_Location";
+				interaction.Items[9].UnlockConditions.Add(extraCondition);
+			}
+		}
 		ShopItemData shopItemData;
 		for (int i = 0; i < interaction.Items.Count; i++) {
 			shopItemData = interaction.Items[i];
@@ -186,30 +196,6 @@ public static class Patches {
 				return;
 			}
 			shopItemData._ItemData = LocationFinder.ItemBeingFound(id, false);
-			/*
-			if (SessionTools.LocationScouts != null) {
-				if (!SessionTools.LocationScouts.ContainsKey(id)) {
-					return;
-					// this happens for not-unlocked shop items (like Asrar has) that aren't
-					// locations in the multiworld
-				}
-				Archipelago.MultiClient.Net.Models.ScoutedItemInfo itemInfo = SessionTools.LocationScouts[id];
-				if (itemInfo.Player.Equals(SessionTools.ActivePlayer)) {
-					shopItemData._ItemData = ItemGiver.GetItemData(itemInfo.ItemId, false);
-				} else {
-					ItemData remoteItem = UnityEngine.Object.Instantiate(ItemGiver.APItemData).Cast<ItemData>();
-					remoteItem._NameID = itemInfo.ItemDisplayName;
-					remoteItem._DescriptionID = "An item from another world. It belongs to " +
-						itemInfo.Player.Name + " in " + itemInfo.ItemGame + ".";
-					shopItemData._ItemData = remoteItem;
-				}
-			} else if (ItemGiver.ItemsBeforeLocations.ContainsKey(id)) { // these will always be local
-				shopItemData._ItemData = ItemGiver.GetItemData(ItemGiver.ItemsBeforeLocations[id], false);
-			} else {
-				shopItemData._ItemData = ItemGiver.APItemData;
-			}
-			*/
-			// I don't think there's a way to make it give 0 of the item like with InteractionPickItem
 		}
 	}
 	
@@ -426,15 +412,11 @@ public static class Patches {
 		return PrefixForApply(__instance);
 	}
 	
-	[HarmonyPatch(typeof(InventoryHandler), nameof(InventoryHandler.UpdateItem))]
-	[HarmonyPostfix]
-	static void WhereIsThisItemComingFrom(ItemData item) {
-		if (item == InventoryHandler.ItemDatabase.RawMaterials) {
-			log((new System.Diagnostics.StackTrace()).ToString());
-			log("Trying Il2CppSystem version too:");
-			log((new Il2CppSystem.Diagnostics.StackTrace()).ToString());
-		}
-	}
+	// [HarmonyPatch(typeof(NotificationScreen), nameof(NotificationScreen.ShowNotification))]
+	// [HarmonyPostfix]
+	// static void WhereIsThisNotificationComingFrom() {
+	// 	log((new System.Diagnostics.StackTrace()).ToString());
+	// }
 	
 	/*
 	private static string biomorphsStem = null;
@@ -488,12 +470,12 @@ public static class Patches {
 	*/
 	[HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnMindBreak))]
 	[HarmonyPostfix]
-	static void OuterPostfix(MonsterData monsterData, SerializationData serializationData) {
+	static void ResyncArsenal(MonsterData monsterData, SerializationData serializationData) {
 		if (serializationData == null || monsterData == null || monsterData._NameID == ""
 			|| monsterData._TextTable == null) {
 			return;
 		}
-		string monsterName = monsterData._TextTable.GetFieldTextForLanguage(monsterData._NameID, 1);
+		string monsterName = Biomorphs.MonsterName(monsterData);
 		if (Biomorphs.IsBiomorphable(monsterName)) {
 			// Biomorphs.RestoreBiomorphs(biomorphsStem);
 			// biomorphsStem = null;
@@ -504,6 +486,29 @@ public static class Patches {
 			}
 		}
 	}
+	
+	[HarmonyPatch(typeof(LevelUpUI), nameof(LevelUpUI.OnBiomorphReward))]
+	[HarmonyPrefix]
+	static void StopExtraNotification(MonsterData monsterData, ref bool rewardUnlocked) {
+		if (monsterData == null) {
+			return;
+		}
+		if (Biomorphs.IsBiomorphable(Biomorphs.MonsterName(monsterData))) {
+			rewardUnlocked = false;
+		}
+	}
+	
+	// [HarmonyPatch(typeof(LevelUpUI), nameof(LevelUpUI.CoroutineBiomorphRewardNotification))]
+	// [HarmonyPrefix]
+	// static void StopExtraNotification(MonsterData monsterData, ref bool rewardUnlocked) {
+	// 	log("LevelUpUI.CoroutineBiomorphRewardNotification called");
+	// 	log(monsterData.ToString());
+	// 	log(rewardUnlocked.ToString());
+	// 	if (Biomorphs.IsBiomorphable(Biomorphs.MonsterName(monsterData))) {
+	// 		rewardUnlocked = false;
+	// 	}
+	// 	return;
+	// }
 	
 	// [HarmonyPatch(typeof(ProgressHandler), nameof(ProgressHandler.OnLoad))]
 	// [HarmonyPostfix]
@@ -562,9 +567,9 @@ public class Loggers {
 	// 		DialogueLua.GetVariable(variable).AsString);
 	// } //SetVariable isn't always used when a variable is set
 	
-	[HarmonyPatch(typeof(BiomorphRewardDataArsenal), nameof(BiomorphRewardDataArsenal.Apply))]
-	[HarmonyPostfix]
-	static void LogApply() {
-		Melon<Randomizer>.Logger.Msg("Apply was called");
-	}
+	// [HarmonyPatch(typeof(BiomorphRewardDataArsenal), nameof(BiomorphRewardDataArsenal.Apply))]
+	// [HarmonyPostfix]
+	// static void LogApply() {
+	// 	Melon<Randomizer>.Logger.Msg("Apply was called");
+	// }
 }

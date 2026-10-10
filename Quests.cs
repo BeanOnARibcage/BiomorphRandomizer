@@ -66,6 +66,9 @@ public static class Quests {
 	
 	public static void CheckForQuestLocation(long id) {
 		switch (id) {
+			case 53:
+				DialogueLua.SetVariable("Archipelago_SQ35_State3_Location", true);
+				return;
 			case 401:
 				DialogueLua.SetVariable("Archipelago_SQ02_State1_Location", true);
 				return;
