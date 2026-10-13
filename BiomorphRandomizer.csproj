@@ -4,6 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>BiomorphRandomizer</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>anycpu</PlatformTarget>
     <!-- <Nullable>enable</Nullable> -->
   </PropertyGroup>
 
@@ -14,9 +16,6 @@
   <ItemGroup>
     <Reference Include="MelonLoader">
       <HintPath>lib\MelonLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="0Harmony">
-      <HintPath>lib\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Il2CppInterop.Runtime">
       <HintPath>lib\Il2CppInterop.Runtime.dll</HintPath>
@@ -38,6 +37,9 @@
     </Reference>
     <Reference Include="Unity.ResourceManager">
       <HintPath>lib\Unity.ResourceManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Il2CppInterop.Common">
+      <HintPath>lib\Il2CppInterop.Common.dll</HintPath>
     </Reference>
   </ItemGroup>
 

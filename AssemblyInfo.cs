@@ -3,3 +3,4 @@ using BiomorphRandomizer;
 
 [assembly: MelonInfo(typeof(Randomizer), "Biomorph Randomizer", "0.3.1", "BeanOnARibcage")]
 [assembly: MelonGame("Lucid Dreams Studio", "BIOMORPH")]
+[assembly: HarmonyDontPatchAll]

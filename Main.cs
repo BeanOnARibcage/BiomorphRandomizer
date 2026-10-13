@@ -12,11 +12,14 @@ public class Randomizer : MelonMod {
 		Preferences.LoadPreferences();
 		if (Preferences.Enable.Value) {
 			SessionTools.CreateSession();
+			Patcher.DoThePatching();
 		} else {
-			LoggerInstance.Msg("Randomizer disabled. Unpatching methods.");
-			this.HarmonyInstance.UnpatchSelf();
-			// this.HarmonyInstance.PatchAll(typeof(Loggers));
+			LoggerInstance.Msg("Randomizer disabled.");
 		}
+	}
+	
+	public override void OnDeinitializeMelon() {
+		Patcher.UndoThePatching();
 	}
 	
 	public override void OnUpdate() {
