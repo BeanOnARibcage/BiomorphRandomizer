@@ -452,9 +452,6 @@ public static unsafe class Patcher {
 	private static IntPtr StopExtraNotification(IntPtr instance, IntPtr monsterData,
 											IntPtr rewardUnlocked, IntPtr methodInfo) {
 		MonsterData monster = getManagedValue<MonsterData>(monsterData, false, false);
-		Melon<Randomizer>.Logger.Msg(instance.ToString() + " " + monsterData.ToString() + " " +
-			rewardUnlocked.ToString() + " " + methodInfo.ToString());
-		Melon<Randomizer>.Logger.Msg((rewardUnlocked == (IntPtr)NativeBool.True).ToString());
 		bool leaveRewardUnlocked = Patches.StopExtraNotification(monster);
 		if (!leaveRewardUnlocked) {
 			rewardUnlocked = (IntPtr)NativeBool.False;
@@ -654,8 +651,13 @@ public static class Patches {
 		}
 		if (DialogueLua.DoesVariableExist("Archipelago_Progressive_Items") &&
 			DialogueLua.GetVariable("Archipelago_Progressive_Items").isTable) {
-			ItemGiver.FillProgressiveItems(TableHandler.TableToDictInt(
-				DialogueLua.GetVariable("Archipelago_Progressive_Items").asTable.luaTable));
+			Dictionary<long, int> progressiveItems = TableHandler.TableToDictInt(
+				DialogueLua.GetVariable("Archipelago_Progressive_Items").asTable.luaTable);
+			log("Loading:");
+			foreach (KeyValuePair<long, int> pair in progressiveItems) {
+				log(pair.Key.ToString() + ": " + pair.Value.ToString());
+			}
+			ItemGiver.FillProgressiveItems(progressiveItems);
 		} else {
 			ItemGiver.FillProgressiveItems(null);
 		}
@@ -711,6 +713,10 @@ public static class Patches {
 		} else {
 			DialogueLua.SetVariable("Archipelago_ItemsBeforeLocations", new Il2CppLanguage.Lua.LuaNil());
 		}
+		log("Saving:");
+		foreach (KeyValuePair<long, int> pair in ItemGiver.ProgressiveItems) {
+			log(pair.Key.ToString() + ": " + pair.Value.ToString());
+		}
 		DialogueLua.SetVariable("Archipelago_Progressive_Items",
 			TableHandler.DictToTable(ItemGiver.ProgressiveItems));
 	}
@@ -746,13 +752,13 @@ public static class Patches {
 			instance._RewardID = instance._RewardID.Substring(3);
 			return true;
 		} else {
-			locationId = Biomorphs.FindBiomorphLocationId(instance);
-			if (locationId == -1) {
-				return true; // Unrandomized reward
-			}
 			if (GameManager.GameState == GameManager.EGameState.LoadGame ||
 				GameManager.GameState == GameManager.EGameState.ReturnToSAFE) {
 				return false; // Don't let the game apply rewards as it's initializing
+			}
+			locationId = Biomorphs.FindBiomorphLocationId(instance);
+			if (locationId == -1) {
+				return true; // Unrandomized reward
 			}
 			ItemData item = LocationFinder.ItemBeingFound(locationId, true);
 			SessionTools.SendLocation(locationId);

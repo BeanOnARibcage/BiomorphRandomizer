@@ -150,7 +150,8 @@ public static class Biomorphs {
 		string variable = "Archipelago_" + monsterName + "_Any";
 		if (!DialogueLua.GetVariable(variable, false)) {
 			DialogueLua.SetVariable(variable, true);
-			if (currentFreeBiomorphs[monsterName] != monsterSerializationData) {
+			if (currentFreeBiomorphs[monsterName] != monsterSerializationData
+					&& currentFreeBiomorphs[monsterName] != "") {
 				DialogueLua.SetVariable(currentFreeBiomorphs[monsterName], 0);
 			}
 			currentFreeBiomorphs[monsterName] = "";
@@ -163,7 +164,7 @@ public static class Biomorphs {
 	}
 	
 	// Takes a BiomorphRewardData that the game is trying to apply and returns
-	// the corresponding locaiton id
+	// the corresponding location id
 	public static long FindBiomorphLocationId(BiomorphRewardData reward) {
 		MonsterData testMonster;
 		int rewardIndex;

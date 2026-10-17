@@ -31,17 +31,7 @@ public class Randomizer : MelonMod {
 		updateCounter++;
 		if (updateCounter > 30) { // Checking for items every frame is probably not necessary
 			if (Biomorphs.ShouldApplyLoadedBiomorphRewards && ItemGiver.CanGetItem()) {
-				LoggerInstance.Msg("About to apply loaded biomorph rewards");
-				try {
-					LoggerInstance.Msg("Entered try block");
-					Biomorphs.ApplyObtainedBiomorphRewards();
-					LoggerInstance.Msg("ApplyObtainedBiomorphRewards returned");
-				} catch (Exception e) {
-					LoggerInstance.Msg("Displaying stack trace:");
-					LoggerInstance.Msg(e.StackTrace);
-					throw;
-				}
-				LoggerInstance.Msg("Biomorph rewards applied without an exception");
+				Biomorphs.ApplyObtainedBiomorphRewards();
 			} else if (Patches.WaitingInteraction != null && ItemGiver.CanGetItem()) {
 				Patches.WaitingInteraction.ExecutePickItem();
 				Patches.WaitingInteraction = null;

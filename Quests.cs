@@ -97,10 +97,13 @@ public static class Quests {
 	// Will in Blightmoor
 	
 	public static void HandleCinematic(BaseDialogueCS cinematic) {
-		string locationData = cinematic._SerializationDataItemToGiveOnEnd.VariableName;
-		long id = LocationFinder.IdFromSerializationData(locationData);
-		cinematic._ItemToGiveOnEnd = chooseItemData(id);
-		SessionTools.SendLocation(id);
+		if (cinematic._SerializationDataItemToGiveOnEnd != null &&
+				cinematic._ItemToGiveOnEnd != null) {
+			string locationData = cinematic._SerializationDataItemToGiveOnEnd.VariableName;
+			long id = LocationFinder.IdFromSerializationData(locationData);
+			cinematic._ItemToGiveOnEnd = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
 	}
 	
 	// BoydCS notes
@@ -184,4 +187,17 @@ public static class Quests {
 			SessionTools.SendLocation(id);
 		}
 	}
+	
+	// Z01MQ03CS notes
+	// Quest.MQ03_...
+	// Quest.MQ03 = 1 is when you first talk to Salm (no state 0)
+	// State 1 Completed is when you take the ring
+	// State 2 Completed is when you give it to Salm and he leaves for Blightmoor
+	// 	(also starts SQ01)
+	
+	// SalmKertarCS notes
+	// Quest.SQ01_...
+	// State 1 Completed is when you get the blueprint from Salm
+	// State 2 Completed is when you build the shop
+	// State 3 Completed is when you talk to Salm at the shop
 }
