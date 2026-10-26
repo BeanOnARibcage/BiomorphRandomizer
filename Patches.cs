@@ -582,26 +582,59 @@ public static class Patches {
 		return true;
 	}
 
+	private static Dictionary<string, List<int>> shopPrices = new Dictionary<string, List<int>>();
+	
 	public static void Shop(ActionInteractionShop __instance) {
+		int priceReductions = 0;
+		if (SessionTools.SlotData != null) {
+			priceReductions = (int)(long)SessionTools.SlotData["reduce_shop_prices"];
+		}
 		InteractionShop interaction = __instance.Interaction;
 		if (interaction._ShopNameID == "UI_CityRegistry") {
 			// Special handling to stop the player from building the laboratory early
 			// Since that prevents the conversation where Meed gives you the blueprint from happening
 			if (interaction.Items[9].UnlockConditions.Count < 2) {
 				SerializationData extraCondition = new SerializationData();
-				extraCondition._VariableName = "Archipelago_SQ35_State3_Location";
-				extraCondition.name = "Archipelago_SQ35_State3_Location";
+				extraCondition._VariableName = "Quest.SQ35_State3_Completed";
+				extraCondition.name = "Extra_Archipelago_Condition";
 				interaction.Items[9].UnlockConditions.Add(extraCondition);
 			}
-		}
-		ShopItemData shopItemData;
-		for (int i = 0; i < interaction.Items.Count; i++) {
-			shopItemData = interaction.Items[i];
-			long id = LocationFinder.IdFromSerializationData(shopItemData.VariableName);
-			if (id < 0) {
-				return;
+			// Same thing for Salm & Alma's shop
+			if (interaction.Items[13].UnlockConditions.Count < 2) {
+				SerializationData extraCondition = new SerializationData();
+				extraCondition._VariableName = "Quest.SQ01_State1_Completed";
+				extraCondition.name = "Extra_Archipelago_Condition";
+				interaction.Items[13].UnlockConditions.Add(extraCondition);
 			}
-			shopItemData._ItemData = LocationFinder.ItemBeingFound(id, false);
+		} else {
+			string shop = interaction._ShopNameID + "_" + SceneHandler.CurrentZoneName;
+			bool newShop = false;
+			if (!shopPrices.ContainsKey(shop)) {
+				newShop = true;
+				shopPrices[shop] = new List<int>();
+			}
+			ShopItemData shopItemData;
+			for (int i = 0; i < interaction.Items.Count; i++) {
+				shopItemData = interaction.Items[i];
+				if (newShop) {
+					if (priceReductions == 2) {
+						shopItemData._Money /= 5;
+					} else if (priceReductions == 1) {
+						if (shop == "UI_SlarShop_Z00_12" || 
+								interaction._ShopNameID == "UI_AsrarMarket" && i < 3) {
+							shopItemData._Money /= 5;
+						}
+					}
+					shopPrices[shop].Add(shopItemData._Money);
+				} else {
+					shopItemData._Money = shopPrices[shop][i];
+				}
+				long id = LocationFinder.IdFromSerializationData(shopItemData.VariableName);
+				if (id < 0) {
+					continue;
+				}
+				shopItemData._ItemData = LocationFinder.ItemBeingFound(id, false);
+			}
 		}
 	}
 
@@ -638,6 +671,7 @@ public static class Patches {
 	public static void ReadArchipelagoData() {
 		log("PersistentDataManager.ApplySaveData postfix entered");
 		SessionTools.ItemsProcessed = DialogueLua.GetVariable("Archipelago_Items", 0);
+		ItemGiver.ScargatoCount = DialogueLua.GetVariable("Game.ScargatosFound", 0);
 		Melon<Randomizer>.Logger.Msg("Items already processed: " + SessionTools.ItemsProcessed.ToString());
 		if (DialogueLua.DoesVariableExist("Archipelago_UnscoutedLocations") &&
 			DialogueLua.GetVariable("Archipelago_UnscoutedLocations").isTable) {
@@ -695,12 +729,29 @@ public static class Patches {
 			Quests.HandleCinematic(cinematic.Cast<Z04SQ35CS>());
 			return;
 		}
+		if (cinematicType == Il2CppType.Of<Z01MQ03CS>()) {
+			Quests.HandleCinematic(cinematic.Cast<Z01MQ03CS>());
+			return;
+		}
+		if (cinematicType == Il2CppType.Of<SalmKertarCS>()) {
+			Quests.HandleCinematic(cinematic.Cast<SalmKertarCS>());
+			return;
+		}
+		if (cinematicType == Il2CppType.Of<Z01SQ06CS>()) {
+			Quests.HandleCinematic(cinematic.Cast<Z01SQ06CS>());
+			return;
+		}
+		if (cinematicType == Il2CppType.Of<Z00SQ06CS>()) {
+			Quests.HandleCinematic(cinematic.Cast<Z00SQ06CS>());
+			return;
+		}
 		return;
 	}	
 
 	public static void RecordItemsProcessed() {
 		Melon<Randomizer>.Logger.Msg("SaveGame called");
 		DialogueLua.SetVariable("Archipelago_Items", SessionTools.ItemsProcessed);
+		DialogueLua.SetVariable("Game.ScargatosFound", ItemGiver.ScargatoCount);
 		if (LocationFinder.UnscoutedLocations.Count > 0) {
 			DialogueLua.SetVariable("Archipelago_UnscoutedLocations",
 				TableHandler.ListToTable(LocationFinder.UnscoutedLocations));
@@ -753,7 +804,8 @@ public static class Patches {
 			return true;
 		} else {
 			if (GameManager.GameState == GameManager.EGameState.LoadGame ||
-				GameManager.GameState == GameManager.EGameState.ReturnToSAFE) {
+				GameManager.GameState == GameManager.EGameState.ReturnToSAFE ||
+				GameManager.GameState == GameManager.EGameState.Dead) {
 				return false; // Don't let the game apply rewards as it's initializing
 			}
 			locationId = Biomorphs.FindBiomorphLocationId(instance);

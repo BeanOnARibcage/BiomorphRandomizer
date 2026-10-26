@@ -29,6 +29,7 @@ public static class ItemGiver {
 	public static Dictionary<long, long> ItemsBeforeLocations = new Dictionary<long, long>();
 	// for item packets with a local location that hasn't been checked in the game yet
 	// key is location ID and value is item ID
+	public static int ScargatoCount = 0;
 	
 	public static bool CanGetItem() {
 		try {
@@ -135,7 +136,10 @@ public static class ItemGiver {
 		}
 		ProgressiveThreeCopies = new Dictionary<long, bool>();
 		// addProgressiveEntry(215, false); // 3 eventually
+		addProgressiveEntry(224, false); // 3 eventually
 		addProgressiveEntry(236, false); // 3 eventually
+		addProgressiveEntry(245, true);
+		addProgressiveEntry(257, true);
 		addProgressiveEntry(300, false); // 3 eventually
 		// addProgressiveEntry(304, false);
 		// addProgressiveEntry(316, false);
@@ -190,6 +194,9 @@ public static class ItemGiver {
 			case 5: // Mementos
 				return items.Mementos[ones];
 			case 6: // Scargatos
+				if (itemIsBeingGranted) {
+					ScargatoCount++;
+				}
 				return items.Scargatos[ones];
 			case 7: // Will Discs
 				return items.WillDiscs[ones].Cast<ItemData>();

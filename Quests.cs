@@ -11,6 +11,10 @@ public static class Quests {
 	// Quest.SQ20_State1_Completed
 	// Global.SAFEUpgradeUnlocked
 	// Quest.SQ35_State1_Completed
+	// Quest.SQ06_MetScavengerSon
+	// Quest.SQ06 (integer)
+	// Quest.SQ06_State1_Completed
+	// Quest.MQ03_State1_Completed
 	public static void SetQuestVariables(string map) {
 		switch (map) {
 			case "Z00_02":
@@ -21,6 +25,10 @@ public static class Quests {
 				DialogueLua.SetVariable("Quest.SQ20_State1_Completed",
 					DialogueLua.GetVariable("Archipelago_SQ20_State1_Item", false));
 				goto case "Z03_06";
+			case "Z00_15":
+				// Mémé
+				DialogueLua.SetVariable("Game.ScargatosFound", ItemGiver.ScargatoCount);
+				return;
 			case "Z04_01":
 				// Boyd
 				DialogueLua.SetVariable("Quest.SQ02_State1_Completed",
@@ -47,6 +55,29 @@ public static class Quests {
 				DialogueLua.SetVariable("Quest.SQ35_State1_Completed",
 					DialogueLua.GetVariable("Archipelago_SQ35_State1_Item", false));
 				return;
+			case "Z01_18":
+				// Busko
+				DialogueLua.SetVariable("Quest.SQ06_MetScavengerSon",
+					DialogueLua.GetVariable("Archipelago_SQ06_Busko_Location", false));
+				return;
+			case "Z00_06":
+				// Skipio
+				DialogueLua.SetVariable("Quest.SQ06",
+					DialogueLua.GetVariable("Archipelago_SQ06_Busko_Item", false) ? 1 : 0);
+					// 1 if true, 0 if false
+				DialogueLua.SetVariable("Quest.SQ06_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_SQ06_State1_Location", false));
+				return;
+			case "Z01_21":
+				// Salm and Alma
+				DialogueLua.SetVariable("Quest.MQ03_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_MQ03_State1_Location", false));
+				return;
+			case "Z01_08":
+				// Salm and Alma
+				DialogueLua.SetVariable("Quest.MQ03_State1_Completed",
+					DialogueLua.GetVariable("Archipelago_MQ03_State1_Item", false));
+				return;
 		}
 	}
 	
@@ -60,6 +91,15 @@ public static class Quests {
 				return;
 			case 1:
 				DialogueLua.SetVariable("Archipelago_SQ35_State1_Item", true);
+				return;
+			case 827:
+				DialogueLua.SetVariable("Archipelago_SQ06_Busko_Item", true);
+				return;
+			case 828:
+				DialogueLua.SetVariable("Archipelago_SQ06_State1_Item", true);
+				return;
+			case 829:
+				DialogueLua.SetVariable("Archipelago_MQ03_State1_Item", true);
 				return;
 		}
 	}
@@ -78,6 +118,15 @@ public static class Quests {
 			case 410:
 				DialogueLua.SetVariable("Archipelago_SQ35_State1_Location", true);
 				return;
+			case 107:
+				DialogueLua.SetVariable("Archipelago_MQ03_State1_Location", true);
+				return;
+			case 121:
+				DialogueLua.SetVariable("Archipelago_SQ06_Busko_Location", true);
+				return;
+			case 61:
+				DialogueLua.SetVariable("Archipelago_SQ06_State1_Location", true);
+				return;
 		}
 	}
 	
@@ -93,8 +142,7 @@ public static class Quests {
 	// BaseDialogueCS notes:
 	// use _ItemToGiveOnEnd and _SerializationDataItemToGiveOnEnd
 	// Conversations:
-	// Will in Mezzo Skyway
-	// Will in Blightmoor
+	// All Will's conversations (presumably)
 	
 	public static void HandleCinematic(BaseDialogueCS cinematic) {
 		if (cinematic._SerializationDataItemToGiveOnEnd != null &&
@@ -190,14 +238,56 @@ public static class Quests {
 	
 	// Z01MQ03CS notes
 	// Quest.MQ03_...
-	// Quest.MQ03 = 1 is when you first talk to Salm (no state 0)
+	// Quest.MQ03_SpokenOnce is when you first talk to Salm
 	// State 1 Completed is when you take the ring
 	// State 2 Completed is when you give it to Salm and he leaves for Blightmoor
 	// 	(also starts SQ01)
+	
+	public static void HandleCinematic(Z01MQ03CS cinematic) {
+		if (DialogueLua.GetVariable("Quest.MQ03_SpokenOnce", false) &&
+			DialogueLua.GetVariable("Quest.MQ03_State1_Completed", false) &&
+			!DialogueLua.GetVariable("Quest.MQ03_State2_Completed", false)) {
+			long id = LocationFinder.IdFromSerializationData("Quest.MQ03_State2_Completed");
+			cinematic._ItemDataAccessKey = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
+	}
 	
 	// SalmKertarCS notes
 	// Quest.SQ01_...
 	// State 1 Completed is when you get the blueprint from Salm
 	// State 2 Completed is when you build the shop
 	// State 3 Completed is when you talk to Salm at the shop
+	
+	public static void HandleCinematic(SalmKertarCS cinematic) {
+		if (!DialogueLua.GetVariable("Quest.SQ01_State1_Completed", false)) {
+			long id = LocationFinder.IdFromSerializationData("Quest.SQ01_State1_Completed");
+			cinematic._ItemDataBlueprintSalm = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
+	}
+	
+	// Pay It Forward notes
+	// Z01SQ06CS
+	// Quest.SQ06 = 1 and MetScavengerSon are when you get the locking mechanism from Busko
+	// (Busko checks MetScavengerSon and Skipio checks Quest.SQ06)
+	// Z00SQ06CS
+	// State 1 Completed is when you get the letter from Skipio
+	
+	public static void HandleCinematic(Z01SQ06CS cinematic) {
+		if (!DialogueLua.GetVariable("Quest.SQ06_MetScavengerSon", false)) {
+			long id = LocationFinder.IdFromSerializationData("Archipelago_SQ06_Busko_Location");
+			cinematic._ItemHalfLocket = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
+	}
+	
+	public static void HandleCinematic(Z00SQ06CS cinematic) {
+		if (DialogueLua.GetVariable("Quest.SQ06", 0) > 0 &&
+			!DialogueLua.GetVariable("Quest.SQ06_State1_Completed", false)) {
+			long id = LocationFinder.IdFromSerializationData("Archipelago_SQ06_State1_Location");
+			cinematic._ItemDataLetter = chooseItemData(id);
+			SessionTools.SendLocation(id);
+		}
+	}
 }

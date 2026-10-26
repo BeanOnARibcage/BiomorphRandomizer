@@ -17,64 +17,18 @@ public static class Biomorphs {
 	public static Dictionary<string, int> rewardsIndexByName;
 	
 	public static void SetAndFillBiomorphRewards() {
-		// if (SessionTools.CheckConnection()) {
-		// 	return; // This should only be executed before the data in the database has been modified
-		// }
 		rewardsIndexByName = new Dictionary<string, int>();
-		// BiomorphRewardData reward, firstReward;
-		// ItemData itemData;
 		string monsterName;
 		int arsenalIndex = 0;
 		
 		foreach (MonsterData monster in InventoryHandler.ItemDatabase.BiomorphArsenal) {
-			// reward = UnityEngine.Object.Instantiate(monster.BiomorphRewards[0]._BiomorphReward)
-			// 	.Cast<BiomorphRewardData>();
-			// firstReward = reward;
-			// BiomorphRewards.Add(reward);
-			
-			// These lines are the only part I want to keep
 			monsterName = monster._TextTable.GetFieldTextForLanguage(monster._NameID, 1);
 			rewardsIndexByName.Add(monsterName, arsenalIndex);
 			arsenalIndex += 3;
-			
-			// reward = UnityEngine.Object.Instantiate(monster.BiomorphRewards[1]._BiomorphReward)
-			// 	.Cast<BiomorphRewardData>();
-			// reward._Icon = firstReward.Icon;
-			// itemData = UnityEngine.Object.Instantiate(firstReward.ItemData).Cast<ItemData>();
-			// itemData._DescriptionID = reward.Reward + " for the " + itemData.Name + ".";
-			// itemData._NameID = itemData.Name + " Level 2";
-			// reward._ItemData = itemData;
-			// BiomorphRewards.Add(reward);
-			
-			// reward = UnityEngine.Object.Instantiate(monster.BiomorphRewards[2]._BiomorphReward)
-			// 	.Cast<BiomorphRewardData>();
-			// itemData = UnityEngine.Object.Instantiate(firstReward.ItemData).Cast<ItemData>();
-			// itemData._DescriptionID = reward.Reward + " for the " + itemData.Name + ".";
-			// itemData._NameID = itemData.Name + " Level 3";
-			// if (Il2CppType.TypeFromPointer(reward.ObjectClass) == Il2CppType.Of<BiomorphRewardDataChip>()) {
-			// 	itemData._SpriteIcon = reward.Icon;
-			// }
-			// reward._ItemData = itemData;
-			// reward._Icon = firstReward.Icon;
-			// BiomorphRewards.Add(reward);
 		}
 	}
 	
 	public static void SetUpBiomorphLocations() {
-	// 	SetMonsterRewards(5, 2000); // Fubirang
-	// 	SetMonsterRewards(12, 2003); // Scarbyttle
-	// }
-	
-	// private static void SetMonsterRewards(int monsterIndex, long firstId) {
-	// 	MonsterData monster = InventoryHandler.ItemDatabase.BiomorphArsenal[monsterIndex];
-	// 	for (int i = 0; i < 3; i++) {
-	// 		if (LocationFinder.IsLocationIncluded(firstId + i)) {
-	// 			ItemData item = LocationFinder.ItemBeingFound(firstId + i, false);
-	// 			item = UnityEngine.Object.Instantiate(item).Cast<ItemData>();
-	// 			item._NameID = (firstId + i).ToString();
-	// 			monster.BiomorphRewards[i]._BiomorphReward._ItemData = item;
-	// 		}
-	// 	}
 	}
 	
 	public static void ShuffleFreeBiomorphs(string room) {
@@ -95,6 +49,30 @@ public static class Biomorphs {
 			case "Z04_18":
 				shuffleFreeBiomorph("Scarbyttle", "SerializationData_MindBreak_Spiky_14",
 					"SerializationData_MindBreak_Spiky_17");
+				break;
+			case "Z01_23":
+				shuffleFreeBiomorph("Toroth", "SerializationData_Z01_MindBreak_Toroth_08",
+					"SerializationData_Z01_MindBreak_Toroth_02");
+				break;
+			case "Z01_06":
+				shuffleFreeBiomorph("Toroth", "SerializationData_Z01_MindBreak_Toroth_02",
+					"SerializationData_Z01_MindBreak_Toroth_08");
+				break;
+			case "Z01_22":
+				shuffleFreeBiomorph("Klerek", "SerializationData_Z01_MindBreak_Telekinesis_08",
+					"SerializationData_Z01_MindBreak_Telekinesis_03");
+				break;
+			case "Z01_15":
+				shuffleFreeBiomorph("Klerek", "SerializationData_Z01_MindBreak_Telekinesis_03",
+					"SerializationData_Z01_MindBreak_Telekinesis_08");
+				break;
+			case "Z01_19":
+				shuffleFreeBiomorph("Sorios", "SerializationData_Z01_MindBreak_Sand_11",
+					"SerializationData_Z01_MindBreak_Sand_08");
+				break;
+			case "Z01_04":
+				shuffleFreeBiomorph("Sorios", "SerializationData_Z01_MindBreak_Sand_08",
+					"SerializationData_Z01_MindBreak_Sand_11");
 				break;
 		}
 		return;
@@ -117,6 +95,9 @@ public static class Biomorphs {
 		currentFreeBiomorphs = new Dictionary<string, string>();
 		createFreeBiomorph("Fubirang", "SerializationData_MindBreak_Harpoon_15");
 		createFreeBiomorph("Scarbyttle", "SerializationData_MindBreak_Spiky_17");
+		createFreeBiomorph("Toroth", "SerializationData_Z01_MindBreak_Toroth_08");
+		createFreeBiomorph("Klerek", "SerializationData_Z01_MindBreak_Telekinesis_08");
+		createFreeBiomorph("Sorios", "SerializationData_Z01_MindBreak_Sand_11");
 	}
 	
 	private static void createFreeBiomorph(string monsterName, string monsterSerializationData) {
@@ -168,15 +149,20 @@ public static class Biomorphs {
 	public static long FindBiomorphLocationId(BiomorphRewardData reward) {
 		MonsterData testMonster;
 		int rewardIndex;
-		testMonster = InventoryHandler.ItemDatabase.BiomorphArsenal[5]; // Fubirang
-		rewardIndex = testRewardList(reward, testMonster);
-		if (rewardIndex >= 0) {
-			return 2000 + rewardIndex;
-		}
-		testMonster = InventoryHandler.ItemDatabase.BiomorphArsenal[12]; // Scarbyttle
-		rewardIndex = testRewardList(reward, testMonster);
-		if (rewardIndex >= 0) {
-			return 2003 + rewardIndex;
+		Dictionary<int, long> monsterNumbers = new Dictionary<int, long>();
+		// key is index in BiomorphArsenal, value is ID of first location
+		monsterNumbers[5] = 2000; // Fubirang
+		monsterNumbers[12] = 2003; // Scarbyttle
+		monsterNumbers[19] = 2006; // Toroth
+		monsterNumbers[15] = 2009; // Sorios
+		monsterNumbers[8] = 2012; // Klerek
+		
+		foreach (KeyValuePair<int, long> pair in monsterNumbers) {
+			testMonster = InventoryHandler.ItemDatabase.BiomorphArsenal[pair.Key];
+			rewardIndex = testRewardList(reward, testMonster);
+			if (rewardIndex >= 0) {
+				return pair.Value + rewardIndex;
+			}
 		}
 		return -1;
 	}

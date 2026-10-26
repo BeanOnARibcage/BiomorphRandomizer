@@ -44,8 +44,7 @@ public static class LocationFinder {
 	}
 	
 	public static void CheckForGoal() {
-		bool goalCondition = DialogueLua.GetVariable("SerializationData_Z01_Map_01", 0) > 0 ||
-			DialogueLua.GetVariable("SerializationData_Z01_Map_10", 0) > 0;
+		bool goalCondition = DialogueLua.GetVariable("Quest.MQ02_State4_Completed", false);
 		if (goalCondition && SessionTools.CheckConnection()) {
 			SessionTools.SendGoal();
 		}
@@ -108,9 +107,10 @@ public static class LocationFinder {
 		return null;
 	}
 	
-	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17, 18, 19,
-		20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-		46, 47, 48, 49, 50, 51, 55, 56, 57, 58, 403, 409, 412, 414, 415, 416, 2001, 2002, 2005});
+	private static List<long> excludedLocations = new List<long>(new long[] {306, 309, 14, 15, 16, 17,
+		18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+		46, 48, 49, 50, 51, 55, 56, 57, 58, 403, 409, 412, 414, 415, 416, 102, 105, 108, 113, 117,
+		124, 2001, 2002, 2005, 2014});
 	
 	public static void FillLocationDictionary() {
 		locationDictionary = new Dictionary<string, long>();
@@ -135,7 +135,7 @@ public static class LocationFinder {
 		locationDictionary.Add("ShopItemData_Items_MementoSocket_SlarShop_01", 5);
 		locationDictionary.Add("ShopItemData_Mementos_15_Phase3Accelerator_01", 6);
 		locationDictionary.Add("ShopItemData_Mementos_03_CombatDiskette_01", 7);
-		locationDictionary.Add("Quest.SQ02_State2_Completed", 8); // need to double-check the Boyd quest
+		locationDictionary.Add("Quest.SQ02_State2_Completed", 8);
 		locationDictionary.Add("Quest.SQ02_State4_Completed", 9);
 		locationDictionary.Add("Quest.SQ02_State5_Completed", 10);
 		locationDictionary.Add("ShopItemData_Mementos_01_BloodColoredGlasses_01", 11);
@@ -184,6 +184,8 @@ public static class LocationFinder {
 		locationDictionary.Add("NPCs.Boyd_Shop2_Finished", 54);
 		locationDictionary.Add("NPCs.Boyd_Shop3_Finished", 55);
 		locationDictionary.Add("SerializationData_NPC_Will_Z00_01", 59);
+		locationDictionary.Add("Quest.SQ01_State1_Completed", 60);
+		locationDictionary.Add("Archipelago_SQ06_State1_Location", 61);
 		
 		// Mezzo Skyway
 		locationDictionary.Add("SerializationData_Z04_Quest_Wrench_01", 401);
@@ -205,6 +207,35 @@ public static class LocationFinder {
 		locationDictionary.Add("SerializationData_Z04_LogicBlocks_01", 417);
 		locationDictionary.Add("SerializationData_Z04_RawMaterial_03", 418);
 		
+		// Dunes of Time
+		locationDictionary.Add("SerializationData_Z01_RawMaterials_01", 101);
+		locationDictionary.Add("SerializationData_Z01_Section_1", 102);
+		locationDictionary.Add("SerializationData_Z01_Laurentium_01", 103);
+		locationDictionary.Add("SerializationData_Z01_LogicBlocks_02", 104);
+		locationDictionary.Add("SerializationData_Z01_BiomorphPart", 105);
+		locationDictionary.Add("SerializationData_Chip_06", 106);
+		locationDictionary.Add("SerializationData_Z01_Quest_KertarGuildRing_01", 107);
+		locationDictionary.Add("SerializationData_Z01_VitalModule_01", 108);
+		locationDictionary.Add("Items.Scargatos.04", 109);
+		locationDictionary.Add("SerializationData_Z01_RawMaterials_02", 110);
+		locationDictionary.Add("Quest.MQ03_State2_Completed", 111);
+		locationDictionary.Add("Items.Scargatos.05", 112);
+		locationDictionary.Add("SerializationData_Z01_Chest_04", 113);
+		locationDictionary.Add("SerializationData_NPC_Will_Z01_12", 114);
+		locationDictionary.Add("SerializationData_Blueprint_HarloHouse_01", 115);
+		locationDictionary.Add("SerializationData_Z01_LogicBlocks_01", 116);
+		locationDictionary.Add("SerializationData_Z01_Chest_03", 117);
+		locationDictionary.Add("SerializationData_Z01_MementoSocket_01", 118);
+		locationDictionary.Add("Items.Scargatos.06", 119);
+		locationDictionary.Add("SerializationData_Z01_Memento_05", 120);
+		locationDictionary.Add("Archipelago_SQ06_Busko_Location", 121);
+		locationDictionary.Add("SerializationData_Z01_Laurentium_02", 122);
+		locationDictionary.Add("SerializationData_Memento_09", 123);
+		locationDictionary.Add("SerializationData_Z01_Chest_01", 124);
+		locationDictionary.Add("SerializationData_Chip_05", 125);
+		locationDictionary.Add("SerializationData_Z01_LetterTapper_01", 126);
+		locationDictionary.Add("SerializationData_Z01_RawMaterials_03", 127);
+		
 		// Biomorphs
 		locationDictionary.Add("Archipelago_Fubirang_01", 2000);
 		locationDictionary.Add("Archipelago_Fubirang_02", 2001);
@@ -212,6 +243,15 @@ public static class LocationFinder {
 		locationDictionary.Add("Archipelago_Scarbyttle_01", 2003);
 		locationDictionary.Add("Archipelago_Scarbyttle_02", 2004);
 		locationDictionary.Add("Archipelago_Scarbyttle_03", 2005);
+		locationDictionary.Add("Archipelago_Toroth_01", 2006);
+		locationDictionary.Add("Archipelago_Toroth_02", 2007);
+		locationDictionary.Add("Archipelago_Toroth_03", 2008);
+		locationDictionary.Add("Archipelago_Sorios_01", 2009);
+		locationDictionary.Add("Archipelago_Sorios_02", 2010);
+		locationDictionary.Add("Archipelago_Sorios_03", 2011);
+		locationDictionary.Add("Archipelago_Klerek_01", 2012);
+		locationDictionary.Add("Archipelago_Klerek_02", 2013);
+		locationDictionary.Add("Archipelago_Klerek_03", 2014);
 		
 		foreach (KeyValuePair<string, long> pair in locationDictionary) {
 			reverseLocationDictionary.Add(pair.Value, pair.Key);
