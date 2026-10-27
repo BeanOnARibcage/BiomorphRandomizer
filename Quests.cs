@@ -78,6 +78,13 @@ public static class Quests {
 				DialogueLua.SetVariable("Quest.MQ03_State1_Completed",
 					DialogueLua.GetVariable("Archipelago_MQ03_State1_Item", false));
 				return;
+			case "Z01_11":
+				// Athenaeum Entrance
+				DialogueLua.SetVariable("Quest.MQ02_State3",
+					DialogueLua.GetVariable("Quest.MQ02_State3_Device1", false) &&
+					DialogueLua.GetVariable("Quest.MQ02_State3_Device2", false) &&
+					DialogueLua.GetVariable("Quest.MQ02_State3_Device3", false));
+				return;
 		}
 	}
 	
