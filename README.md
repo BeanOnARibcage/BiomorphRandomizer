@@ -13,8 +13,7 @@ Before opening the game, go to your game files. Open `UserData/MelonPreferences.
 `[biomorph_connection_info]`, enter the connection info you want to use. If there is no password, leave it as `""`.
 Save the file and start the game.
 
-The game will attempt to connect to the Archipelago multiworld when loading a save, using the connection info you entered in the preferences file. The game will show you what randomized items you find and receive, but if you
-want to use Archipelago commands like `!hint`, you'll need to use a text client.
+The randomizer uses its own set of saves, so your regular save files won't show up as long as the randomizer is enabled (you can disable it in the same preferences file that contains the connection info). The game will attempt to connect to the Archipelago multiworld when loading a save, using the connection info you entered in the preferences file. The game will show you what randomized items you find and receive, but if you want to use Archipelago commands like `!hint`, you'll need to use a text client.
 
 The current goal is to open the door to the Athenaeum.
 

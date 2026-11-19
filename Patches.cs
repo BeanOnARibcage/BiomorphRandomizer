@@ -18,11 +18,18 @@ using Il2CppInterop.Common;
 using MelonLoader.NativeUtils;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using Il2CppLDS.Framework.Platforms;
+using System.Reflection;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace BiomorphRandomizer;
 
 public static unsafe class Patcher {
 	private delegate IntPtr GFPFD(Delegate d);
+	
+	private static void log(string message) {
+		Melon<Randomizer>.Logger.Msg(message);
+	}
 	
 	public static void DoThePatching() {
 		IntPtr orig;
@@ -160,6 +167,35 @@ public static unsafe class Patcher {
 		patch = gfpfd(delegateLU_OBR);
 		hookLU_OBR = new NativeHook<LU_OBRDelegate>(orig, patch);
 		hookLU_OBR.Attach();
+		
+		// MethodInfo save = typeof(WindowsSaveData).GetMethod("CoroutineSave",
+		// 	new Type[] {typeof(string), typeof(string), typeof(Action<int>)});
+		// orig = getOrig(save);
+		// delegateSaveW = SaveToRandomizerFilepath;
+		// patch = gfpfd(delegateSaveW);
+		// hookSaveW = new NativeHook<SaveWDelegate>(orig, patch);
+		// hookSaveW.Attach();
+		
+		// MethodInfo load = typeof(WindowsSaveData).GetMethod("CoroutineLoad",
+		// 	new Type[] {typeof(string), typeof(Action<int, string>)});
+		// orig = getOrig(load);
+		// delegateLoad = LoadFromRandomizerFilepath;
+		// patch = gfpfd(delegateLoad);
+		// hookLoad = new NativeHook<LoadDelegate>(orig, patch);
+		// hookLoad.Attach();
+		
+		// orig = getOrig(typeof(WindowsSaveData), nameof(WindowsSaveData.CoroutineDelete));
+		// delegateDelete = DeleteAtRandomizerFilepath;
+		// patch = gfpfd(delegateDelete);
+		// hookDelete = new NativeHook<DeleteDelegate>(orig, patch);
+		// hookDelete.Attach();
+		
+		MethodInfo filePathGetter = typeof(SaveHandler).GetProperty("SaveFilePath").GetMethod;
+		orig = getOrig(filePathGetter);
+		delegateGetSFP = SubstituteRandomizerFilepath;
+		patch = gfpfd(delegateGetSFP);
+		hookGetSFP = new NativeHook<GetSFPDelegate>(orig, patch);
+		hookGetSFP.Attach();
 	}
 	
 	public static void UndoThePatching() {
@@ -185,11 +221,21 @@ public static unsafe class Patcher {
 		hookDefense.Detach();
 		hookPH_OMB.Detach();
 		hookLU_OBR.Detach();
+		// hookSaveW.Detach();
+		// hookLoad.Detach();
+		// hookDelete.Detach();
+		hookGetSFP.Detach();
 	}
 	
 	private static IntPtr getOrig(Type type, string method) {
 		IntPtr orig = *(IntPtr*) (IntPtr) Il2CppInteropUtils.
 			GetIl2CppMethodInfoPointerFieldForGeneratedMethod(type.GetMethod(method)).GetValue(null);
+		return orig;
+	}
+	
+	private static IntPtr getOrig(MethodInfo method) {
+		IntPtr orig = *(IntPtr*) (IntPtr) Il2CppInteropUtils.
+			GetIl2CppMethodInfoPointerFieldForGeneratedMethod(method).GetValue(null);
 		return orig;
 	}
 	
@@ -457,6 +503,56 @@ public static unsafe class Patcher {
 			rewardUnlocked = (IntPtr)NativeBool.False;
 		}
 		return hookLU_OBR.Trampoline(instance, monsterData, rewardUnlocked, methodInfo);
+	}
+	
+	// // for WindowsSaveData.CoroutineSave
+	// private delegate IntPtr SaveWDelegate(IntPtr instance, IntPtr bytes, IntPtr filepath,
+	// 									IntPtr onResult, IntPtr methodInfo);
+	// private static NativeHook<SaveWDelegate> hookSaveW;
+	// private static SaveWDelegate delegateSaveW;
+	// private static IntPtr SaveToRandomizerFilepath(IntPtr instance, IntPtr bytes,
+	// 							IntPtr filepath, IntPtr onResult, IntPtr methodInfo) {
+	// 	log("CoroutineSave called");
+	// 	string savepath = IL2CPP.Il2CppStringToManaged(filepath);
+	// 	filepath = IL2CPP.ManagedStringToIl2Cpp(Patches.RandomizerSave(savepath));
+	// 	return hookSaveW.Trampoline(instance, bytes, filepath, onResult, methodInfo);
+	// }
+	
+	// // for WindowsSaveData.CoroutineLoad
+	// private delegate IntPtr LoadDelegate(IntPtr instance, IntPtr filepath,
+	// 										IntPtr onResult, IntPtr methodInfo);
+	// private static NativeHook<LoadDelegate> hookLoad;
+	// private static LoadDelegate delegateLoad;
+	// private static IntPtr LoadFromRandomizerFilepath(IntPtr instance, IntPtr filepath,
+	// 												IntPtr onResult, IntPtr methodInfo) {
+	// 	log("CoroutineLoad called");
+	// 	string loadpath = IL2CPP.Il2CppStringToManaged(filepath);
+	// 	filepath = IL2CPP.ManagedStringToIl2Cpp(Patches.RandomizerSave(loadpath));
+	// 	return hookLoad.Trampoline(instance, filepath, onResult, methodInfo);
+	// }
+	
+	// // for WindowsSaveData.CoroutineDelete
+	// private delegate IntPtr DeleteDelegate(IntPtr instance, IntPtr filepath,
+	// 										IntPtr onResult, IntPtr methodInfo);
+	// private static NativeHook<DeleteDelegate> hookDelete;
+	// private static DeleteDelegate delegateDelete;
+	// private static IntPtr DeleteAtRandomizerFilepath(IntPtr instance, IntPtr filepath,
+	// 												IntPtr onResult, IntPtr methodInfo) {
+	// 	log("CoroutineDelete called");
+	// 	string deletepath = IL2CPP.Il2CppStringToManaged(filepath);
+	// 	filepath = IL2CPP.ManagedStringToIl2Cpp(Patches.RandomizerSave(deletepath));
+	// 	return hookDelete.Trampoline(instance, filepath, onResult, methodInfo);
+	// }
+	
+	// for SaveHandler.SaveFilePath's getter
+	private delegate IntPtr GetSFPDelegate(IntPtr instance, IntPtr methodInfo);
+	private static NativeHook<GetSFPDelegate> hookGetSFP;
+	private static GetSFPDelegate delegateGetSFP;
+	private static IntPtr SubstituteRandomizerFilepath(IntPtr instance, IntPtr methodInfo) {
+		IntPtr originalPathNative = hookGetSFP.Trampoline(instance, methodInfo);
+		string originalPath = IL2CPP.Il2CppStringToManaged(originalPathNative);
+		string newPath = Patches.RandomizerSave(originalPath);
+		return IL2CPP.ManagedStringToIl2Cpp(newPath);
 	}
 	
 	private enum NativeBool {
@@ -782,6 +878,44 @@ public static class Patches {
 		ItemGiver.MakeAPInteraction();
 		Biomorphs.SetAndFillBiomorphRewards();
 		LocationFinder.FillLocationDictionary();
+		swapToRandomizerSaves();
+	}
+	
+	private static void swapToRandomizerSaves() {
+		for (int i = 1; i <= 3; i++) {
+			System.Reflection.PropertyInfo filepath = typeof(WindowsSaveData).GetProperty(
+				"_AutoSave" + i.ToString() + "Filepath");
+			if (filepath != null) {
+				filepath.SetValue(null, RandomizerSave((string)filepath.GetValue(null)));
+			} else {
+				log("Filepath property not found for save slot " + i.ToString());
+				continue;
+			}
+			
+			string pathToGO = "/UI Manager/Title Screen/Canvas/Game Selection Panel" +
+				"/Panel_Pivot/Save Slot " + i.ToString() +"/Game Button";
+			SaveSlotUI uiBehaviour = GameObject.Find(pathToGO).GetComponent<SaveSlotUI>();
+			Action<GameData> onRequest = uiBehaviour.OnRequestGameData;
+			SaveHandler.RequestGameData(i, onRequest);
+		}
+		// This works for loading a save but not for saving during gameplay
+	}
+	
+	public static string RandomizerSave(string normalSave) {
+		if (normalSave.Contains("randomizer_")) {
+			return normalSave;
+		} else {
+			return normalSave.Insert(normalSave.Length - 9, "randomizer_");
+		}
+	}
+	
+	// not used currently but probably will be once I implement connection UI
+	public static string NormalSave(string randomizerSave) {
+		if (randomizerSave.Contains("randomizer_")) {
+			return randomizerSave.Remove(randomizerSave.Length - 20, 11);
+		} else {
+			return randomizerSave;
+		}
 	}
 
 	public static void SetVariables(string zone) {
