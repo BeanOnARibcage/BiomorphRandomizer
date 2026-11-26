@@ -196,6 +196,13 @@ public static unsafe class Patcher {
 		patch = gfpfd(delegateGetSFP);
 		hookGetSFP = new NativeHook<GetSFPDelegate>(orig, patch);
 		hookGetSFP.Attach();
+		
+		orig = getOrig(typeof(WindowsSaveData._CoroutineLoad_d__25),
+			nameof(WindowsSaveData._CoroutineLoad_d__25.MoveNext));
+		delegateLoad = ChangeLoadedFilepath;
+		patch = gfpfd(delegateLoad);
+		hookLoad = new NativeHook<LoadDelegate>(orig, patch);
+		hookLoad.Attach();
 	}
 	
 	public static void UndoThePatching() {
@@ -225,6 +232,7 @@ public static unsafe class Patcher {
 		// hookLoad.Detach();
 		// hookDelete.Detach();
 		hookGetSFP.Detach();
+		hookLoad.Detach();
 	}
 	
 	private static IntPtr getOrig(Type type, string method) {
@@ -555,6 +563,17 @@ public static unsafe class Patcher {
 		return IL2CPP.ManagedStringToIl2Cpp(newPath);
 	}
 	
+	// for WindowsSaveData._CoroutineLoad_d__25.MoveNext
+	private delegate IntPtr LoadDelegate(IntPtr instance, IntPtr MethodInfo);
+	private static NativeHook<LoadDelegate> hookLoad;
+	private static LoadDelegate delegateLoad;
+	private static IntPtr ChangeLoadedFilepath(IntPtr instance, IntPtr methodInfo) {
+		WindowsSaveData._CoroutineLoad_d__25 loadEnumerator =
+			getManagedValue<WindowsSaveData._CoroutineLoad_d__25>(instance, false, false);
+		loadEnumerator.filepath = Patches.RandomizerSave(loadEnumerator.filepath);
+		return hookLoad.Trampoline(instance, methodInfo);
+	}
+	
 	private enum NativeBool {
 		False = 0,
 		True = 1
@@ -872,13 +891,13 @@ public static class Patches {
 		if (__instance.name != "Start Game Button") {
 			return;
 		}
+		swapToRandomizerSaves();
 		if (ItemGiver.APItemData != null) {
 			return;
 		}
 		ItemGiver.MakeAPInteraction();
 		Biomorphs.SetAndFillBiomorphRewards();
 		LocationFinder.FillLocationDictionary();
-		swapToRandomizerSaves();
 	}
 	
 	private static void swapToRandomizerSaves() {
